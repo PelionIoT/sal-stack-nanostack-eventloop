@@ -30,7 +30,6 @@ static void timer_struct_free_push(sys_timer_struct_s *free);
 static sys_timer_struct_s * sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(int8_t timer_id, uint16_t slots);
 
-extern int8_t protocol_read_tasklet_id(void);  // MISSÄ TÄMÄ ON?
 
 
 /*
