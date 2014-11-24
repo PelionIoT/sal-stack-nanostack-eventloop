@@ -114,7 +114,7 @@ static void timer_sys_interrupt(int8_t timer_id, uint16_t slots)
 			{
 				arm_event_s event;
 				event.receiver = cur->timer_sys_launch_receiver;
-				event.sender = protocol_read_tasklet_id(); /**< Event sender Tasklet ID */
+				event.sender = 0; /**< Event sender Tasklet ID */
 				event.data_ptr = 0;
 				event.event_type = ARM_LIB_SYSTEM_TIMER_EVENT;
 				event.event_id = cur->timer_sys_launch_message;
