@@ -21,30 +21,6 @@ typedef enum error_t
 	eBUSY = 2,	/*!< resource busy */
 	eSYSTEM		/*!< error code readable in sys_error */
 }error_t;
-#include "tasklet_api.h"
-
-typedef enum arm_nwk_interface_status_type_e
-{
-	ARM_NWK_BOOTSTRAP_READY = 0, /**< Interface configured Bootstrap is ready*/
-	ARM_NWK_RPL_INSTANCE_FLOODING_READY, /**< RPL instance have been flooded */
-	ARM_NWK_SET_DOWN_COMPLETE, /**< Interface DOWN command successfully */
-	ARM_NWK_NWK_SCAN_FAIL, 	/**< Interface have not detect any valid network*/
-	ARM_NWK_IP_ADDRESS_ALLOCATION_FAIL, /*!*< IP address allocation fail(ND, DHCPv4 or DHCPv6 */
-	ARM_NWK_DUPLICATE_ADDRESS_DETECTED, /*!*< User specific GP16 was not valid */
-	ARM_NWK_AUHTENTICATION_START_FAIL, /**< No valid Authentication server detected behind access point */
-	ARM_NWK_AUHTENTICATION_FAIL,	/**< Network authentication fail by Handshake */
-	ARM_NWK_NWK_CONNECTION_DOWN, /*!*< No connection between Access point or Default Router */
-	ARM_NWK_NWK_PARENT_POLL_FAIL, /*!*< Sleepy host poll fail 3 time */
-	ARM_NWK_PHY_CONNECTION_DOWN, /*!*< Interface PHY cable off or serial port interface not respond anymore */
-} arm_nwk_interface_status_type_e;
-
-typedef enum arm_library_event_type_e
-{
-	ARM_LIB_TASKLET_INIT_EVENT, /**< Tasklet Init come always when generate tasklet*/
-	ARM_LIB_NWK_INTERFACE_EVENT,	/**< Interface Bootstrap  or state update event */
-	ARM_LIB_SYSTEM_TIMER_EVENT, /*!*< System Timer event */
-	APPLICATION_EVENT, /**< Application specific event */
-} arm_library_event_type_e;
 
 typedef enum arm_library_event_priority_e
 {

@@ -5,7 +5,6 @@
  *      Author: jarpas01
  */
 #include "ns_types.h"
-#include "tasklet_api.h"
 #include "sys_error.h"
 #include "sys_event.h"
 #include "timer_sys.h"

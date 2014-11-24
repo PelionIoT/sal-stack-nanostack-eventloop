@@ -8,7 +8,6 @@
  */
 #include <string.h>
 #include "ns_types.h"
-#include "tasklet_api.h"
 #include "sys_error.h"
 #include "sys_event.h"
 #include "system_event.h"
