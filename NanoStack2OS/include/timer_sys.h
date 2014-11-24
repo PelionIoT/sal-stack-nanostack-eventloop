@@ -48,4 +48,14 @@ extern int8_t timer_sys_event_cancel(uint8_t snmessage);
 
 extern uint32_t timer_get_runtime_ticks(void);
 
+/**
+ * System Timer update and synch after sleep
+ *
+ * \param ticks Time in 10 ms resolution
+ *
+ * \return none
+ *
+ * */
+void system_timer_tick_update(uint32_t ticks);
+
 #endif /*_PL_NANO_TIMER_SYS_H_*/

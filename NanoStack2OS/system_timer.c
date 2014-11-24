@@ -96,13 +96,52 @@ int8_t timer_sys_wakeup(void)
 
 static void timer_sys_interrupt(int8_t timer_id, uint16_t slots)
 {
-	sys_timer_struct_s * cur, *temp, *prev = 0;
-
 	/*200 * 50us = 10ms*/
 	ns_timer_start(sys_timer_id, 200);
 
 	//Keep runtime time
 	run_time_tick_ticks ++;
+
+	platform_enter_critical();
+	if(system_timer_list_ptr)
+	{
+		cur = system_timer_list_ptr;
+		while(cur)
+		{
+			if(cur->timer_sys_launch_time <= 1)
+			{
+				arm_event_s event;
+				event.receiver = cur->timer_sys_launch_receiver;
+				event.sender = protocol_read_tasklet_id(); /**< Event sender Tasklet ID */
+				event.data_ptr = 0;
+				event.event_type = ARM_LIB_SYSTEM_TIMER_EVENT;
+				event.event_id = cur->timer_sys_launch_message;
+				event.event_data = 0;
+				event.cb_fptr = NULL;
+				arm_ns_event_send(&event);
+				if(prev == 0)
+				{
+					system_timer_list_ptr = cur->next;
+				}
+				else
+				{
+					prev->next = cur->next;
+				}
+				temp = cur;
+				cur = cur->next;
+				temp->next = 0;
+				timer_struct_free_push(temp);
+			}
+			else
+			{
+				cur->timer_sys_launch_time--;
+				prev = cur;
+				cur = cur->next;
+			}
+		}
+	}
+	platform_exit_critical();
+	system_timer_tick_update(1);
 
 	platform_enter_critical();
 	if(system_timer_list_ptr)
@@ -294,5 +333,48 @@ uint32_t core_timer_shortest_tick(void)
 	}
 	platform_exit_critical();
 	return ret_val;
+}
+
+void system_timer_tick_update(uint32_t ticks)
+{
+	sys_timer_struct_s * cur, *temp, *prev = 0;
+	platform_enter_critical();
+	if(sytem_timer_list_ptr)
+	{
+		cur = sytem_timer_list_ptr;
+		while(cur)
+		{
+			if(cur->timer_sys_launch_time <= ticks)
+			{
+				arm_event_s event;
+				event.receiver = cur->timer_sys_launch_receiver;
+				event.sender = 0; /**< Event sender Tasklet ID */
+				event.data_ptr = 0;
+				event.event_type = ARM_LIB_SYSTEM_TIMER_EVENT;
+				event.event_id = cur->timer_sys_launch_message;
+				event.event_data = 0;
+				event_send_internal(&event);
+				if(prev == 0)
+				{
+					sytem_timer_list_ptr = cur->next;
+				}
+				else
+				{
+					prev->next = cur->next;
+				}
+				temp = cur;
+				cur = cur->next;
+				temp->next = 0;
+				timer_struct_free_push(temp);
+			}
+			else
+			{
+				cur->timer_sys_launch_time -= ticks;
+				prev = cur;
+				cur = cur->next;
+			}
+		}
+	}
+	platform_exit_critical();
 }
 
