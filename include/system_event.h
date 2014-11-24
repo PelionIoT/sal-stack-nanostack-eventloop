@@ -65,10 +65,26 @@ typedef struct arm_event_s
 	uint32_t event_data;
 } arm_event_s;
 
-
-
 typedef void (*idle_cb_t)(void *);
 
+/**
+ * \brief This function will be called when stack enter idle state and start waiting signal.
+ */
+extern void platform_event_os_wait(void);
+
+/**
+ * \brief This function will be called when stack receive event and could wake from idle.
+ */
+extern void platform_event_os_signal(void);
+
+/**
+ * \brief This function will be called when stack can enter deep sleep state in detected time.
+ *
+ * \param sleep_time_ms Time in milliseconds to sleep
+ *
+ * \return sleeped time in milliseconds
+ */
+extern uint32_t platform_event_os_sleep(uint32_t sleep_time_ms);
 
 extern int8_t ns_timer_start(int8_t ns_timer_id, uint16_t slots);
 extern int8_t ns_timer_stop(int8_t ns_timer_id);
@@ -76,9 +92,6 @@ extern int8_t ns_timer_sleep(void);
 extern int8_t ns_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t));
 extern int8_t ns_timer_unregister(int8_t ns_timer_id);
 
-extern void core_timer_tick_update(uint32_t ticks);
-extern uint32_t core_timer_shortest_tick(void);
-extern void core_timer_sleep_balance(uint32_t ticks);
 extern void set_core_timer_period(uint8_t snperiod);
 
 extern int8_t timer_sys_wakeup(void);

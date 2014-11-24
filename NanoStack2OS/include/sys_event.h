@@ -41,7 +41,7 @@ extern int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*));
  *
  *
  */
-extern void arm_event_os_idle(void);
+//extern void arm_event_os_idle(void);
  #ifdef __cplusplus
 }
 #endif

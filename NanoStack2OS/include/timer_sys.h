@@ -57,5 +57,14 @@ extern uint32_t timer_get_runtime_ticks(void);
  *
  * */
 void system_timer_tick_update(uint32_t ticks);
+/**
+ * System Timer shortest time in milli seconds
+ *
+ * \param ticks Time in 10 ms resolution
+ *
+ * \return none
+ *
+ * */
+uint32_t system_timer_shortest_time(void);
 
 #endif /*_PL_NANO_TIMER_SYS_H_*/
