@@ -46,6 +46,12 @@ typedef enum arm_library_event_type_e
 	APPLICATION_EVENT, /**< Application specific event */
 } arm_library_event_type_e;
 
+typedef enum arm_library_event_priority_e
+{
+	ARM_LIB_HIGH_PRIORITY_EVENT = 0, /**< High Priority Event (Function CB) */
+	ARM_LIB_MED_PRIORITY_EVENT = 1,	/**< Medium Priority (Timer) */
+	ARM_LIB_LOW_PRIORITY_EVENT = 2, /*!*< Normal Event and ECC / Security */
+} arm_library_event_priority_e;
 
 typedef struct arm_event_s
 {
@@ -55,8 +61,11 @@ typedef struct arm_event_s
 	uint8_t event_id; /**< Timer ID, NWK interface ID or application specific ID */
 	void *data_ptr; /**< Application could share data pointer tasklet to tasklet */
 	void (*cb_fptr)(uint8_t); /**< Application could share data pointer tasklet to tasklet */
+	arm_library_event_priority_e priority;
 	uint32_t event_data;
 } arm_event_s;
+
+
 
 typedef void (*idle_cb_t)(void *);
 
@@ -79,7 +88,6 @@ extern int8_t timer_sys_event(uint8_t snmessage, uint32_t time);
 extern int8_t timer_sys_event_cancel(uint8_t snmessage);
 
 extern void event_init(void);
-extern error_t event_cb_send(void (*fptr)(uint8_t) , uint8_t event, uint8_t snpriority);
 extern  int8_t event_get_active_tasklet(void);
 extern  void event_set_active_tasklet(int8_t tasklet);
 extern int8_t arm_ns_event_send(arm_event_s *event);

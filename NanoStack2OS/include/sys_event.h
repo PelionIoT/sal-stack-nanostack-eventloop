@@ -15,12 +15,6 @@ typedef struct event_cb_t
 	void (*fptr)(uint8_t);
 }event_cb_t;
 
-typedef enum arm_library_event_priority_e
-{
-	ARM_LIB_HIG_PRIORITY_EVENT = 0, /**< High Priority Event (Function CB) */
-	ARM_LIB_MED_PRIORITY_EVENT = 1,	/**< Medium Priority (Timer) */
-	ARM_LIB_LOW_PRIORITY_EVENT = 2, /*!*< Normal Event and ECC / Security */
-} arm_library_event_priority_e;
 
 typedef struct arm_core_event_s
 {

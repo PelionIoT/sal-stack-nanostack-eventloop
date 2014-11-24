@@ -183,6 +183,7 @@ int8_t arm_ns_event_send(arm_event_s *event)
 		event_tmp->event_id = event->event_id; //Function Pointer
 		event_tmp->data_ptr = event->data_ptr;
 		event_tmp->cb_fptr = event->cb_fptr;
+		event_tmp->priority = event->priority;
 		event_core_write(event_tmp);
 		retval = 0;
 	}
@@ -451,36 +452,4 @@ noreturn void event_dispatch(void)
 	{
 		event_dispatch_cycle();
 	}
-}
-
-/**
- * Send an event.
- *
- * \param fptr refers to the function pointer to be called.
- * \param event is an event ID to be sent.
- * \param snpriority describes the priority level of this event.
- *
- * \return eOK
- * \return eFALSE invalid tasklet ID.
- * \return eBUSY event queue full.
- */
-
-error_t event_cb_send(void (*fptr)(uint8_t) , uint8_t event, uint8_t snpriority)
-{
-
-	arm_core_event_s *event_tmp;
-	event_tmp = event_core_get();
-	if(event_tmp)
-	{
-		event_tmp->receiver = -1;
-		event_tmp->cb_fptr = fptr;
-		if(snpriority)
-		{
-			event_tmp->priority = ARM_LIB_HIG_PRIORITY_EVENT;
-		}
-		event_tmp->event_data = event;
-		event_core_write(event_tmp);
-		return eOK;
-	}
-	return eFALSE;
 }
