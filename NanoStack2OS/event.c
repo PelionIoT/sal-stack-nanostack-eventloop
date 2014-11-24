@@ -42,7 +42,6 @@ static void *event_idle_cb_param = NULL;
 int8_t curr_tasklet = 0;
 
 
-extern void core_timer_init(void);
 static arm_core_tasklet_list_s * tasklet_dynamically_allocate(void);
 static arm_core_event_s * event_dynamically_allocate(void);
 arm_core_event_s * event_core_get(void);

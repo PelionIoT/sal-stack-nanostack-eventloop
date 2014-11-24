@@ -10,6 +10,7 @@
 
 static ns_timer_struct *ns_timer_list=0;
 
+
 #define NS_TIMER_RUNNING	1
 static uint8_t ns_timer_state = 0;
 
@@ -259,8 +260,6 @@ int8_t ns_timer_start(int8_t ns_timer_id, uint16_t slots)
 	ns_timer_struct *current_timer = 0;
 	platform_enter_critical();
 
-	
-        
 	/*If none of timers is active*/
 	if(ns_timer_state & NS_TIMER_RUNNING)
 	{

@@ -15,8 +15,6 @@ typedef struct
  * */
 extern void timer_sys_init(void);
 
-extern void core_timer_init(void);
-
 /**
  * Force system sleep until time (in milliseconds)
  *
@@ -48,7 +46,6 @@ extern int8_t timer_sys_event(uint8_t snmessage, uint32_t time);
  * */
 extern int8_t timer_sys_event_cancel(uint8_t snmessage);
 
-extern void core_timer_callback(void);
 extern uint32_t timer_get_runtime_ticks(void);
 
 #endif /*_PL_NANO_TIMER_SYS_H_*/
