@@ -10,7 +10,7 @@
 # OR
 # make CC=iccarm
 
-LIB = eventOS.a
+LIB = libeventOS.a
 SRCS += \
 		src/event.c \
 		src/ns_timer.c \
