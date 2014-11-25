@@ -278,6 +278,7 @@ void system_timer_tick_update(uint32_t ticks)
 				event.event_type = cur->timer_event_type;
 				event.event_id = cur->timer_sys_launch_message;
 				event.event_data = 0;
+				event.cb_fptr = NULL;
 				event.priority = ARM_LIB_MED_PRIORITY_EVENT;
 				arm_ns_event_send(&event);
 				if(prev == 0)
