@@ -103,9 +103,8 @@ extern int8_t ns_timer_sleep(void);
 extern int8_t ns_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t));
 extern int8_t ns_timer_unregister(int8_t ns_timer_id);
 
-extern int8_t timer_sys_wakeup(void);
 extern void timer_sys_disable(void);
-extern void timer_runtime_ticks_sleep_update(uint32_t sleep_ticks);
+extern int8_t timer_runtime_ticks_sleep_update(uint32_t sleep_ticks);
 
 /**
  * Send an event after time expired (in milliseconds)

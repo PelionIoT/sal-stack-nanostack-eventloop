@@ -154,11 +154,13 @@ uint32_t timer_get_runtime_ticks(void)  // only used in dev_stats_internal.c
 	return ret_val;
 }
 
-void timer_runtime_ticks_sleep_update(uint32_t sleep_ticks)
+int8_t timer_runtime_ticks_sleep_update(uint32_t sleep_ticks)
 {
 	platform_enter_critical();
 	run_time_tick_ticks += sleep_ticks;
+	system_timer_tick_update(sleep_ticks);
 	platform_exit_critical();
+	return = timer_sys_wakeup();
 }
 
 int8_t timer_sys_event(uint8_t snmessage, uint32_t time)
