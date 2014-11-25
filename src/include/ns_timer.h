@@ -32,5 +32,6 @@ typedef struct ns_timer_struct
 extern int8_t ns_timer_init(void);
 extern void ns_timer_interrupt_handler(void);
 extern ns_timer_struct *ns_timer_get_pointer_to_timer_struct(int8_t timer_id);
+extern int8_t ns_timer_sleep(void);
 
 #endif /*NS_TIMER_H_*/
