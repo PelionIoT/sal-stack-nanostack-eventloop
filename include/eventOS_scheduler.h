@@ -11,7 +11,7 @@
  #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "ns_types.h"
 /**
  * \brief Initialise event scheduler.
  *

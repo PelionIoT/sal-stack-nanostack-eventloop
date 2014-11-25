@@ -224,7 +224,7 @@ int8_t eventOS_event_timer_cancel(uint8_t snmessage, int8_t tasklet_id)
 }
 
 
-uint32_t system_timer_shortest_time(void)
+uint32_t eventOS_event_timer_shortest_active_timer(void)
 {
 	uint32_t ret_val = 0;
 	sys_timer_struct_s * cur;
