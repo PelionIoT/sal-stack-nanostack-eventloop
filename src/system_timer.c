@@ -12,7 +12,8 @@
 #include "platform/ns_debug.h"
 #include "ns_timer.h"
 #include "nsdynmemLIB.h"
-#include "system_event.h"
+#include "eventOS_event.h"
+#include "eventOS_callback_timer.h"
 
 #ifndef ST_MAX
 #define ST_MAX 6
@@ -41,7 +42,7 @@ void timer_sys_init(void)
 	sys_timer_struct_s *temp = 0;
 	run_time_tick_ticks=0;
 
-	sys_timer_id = ns_timer_register(timer_sys_interrupt);
+	sys_timer_id = eventOS_callback_timer_register(timer_sys_interrupt);
 
 	// Clear old timers
 	while(system_timer_list_ptr)
@@ -69,7 +70,7 @@ void timer_sys_init(void)
 	}
 
 	if(sys_timer_id >= 0)
-		ns_timer_start(sys_timer_id, 200);
+		eventOS_callback_timer_start(sys_timer_id, 200);
 }
 
 
@@ -77,7 +78,7 @@ void timer_sys_init(void)
 /*-------------------SYSTEM TIMER FUNCTIONS--------------------------*/
 void timer_sys_disable(void)
 {
-	ns_timer_stop(sys_timer_id);
+	eventOS_callback_timer_stop(sys_timer_id);
 }
 
 /*
@@ -88,7 +89,7 @@ int8_t timer_sys_wakeup(void)
 	int8_t ret_val = -1;
 	if(sys_timer_id >= 0)
 	{
-		ret_val = ns_timer_start(sys_timer_id, 200);
+		ret_val = eventOS_callback_timer_start(sys_timer_id, 200);
 	}
 	return ret_val;
 }
@@ -97,10 +98,9 @@ int8_t timer_sys_wakeup(void)
 static void timer_sys_interrupt(int8_t timer_id, uint16_t slots)
 {
 	/*200 * 50us = 10ms*/
-	ns_timer_start(sys_timer_id, 200);
+	eventOS_callback_timer_start(sys_timer_id, 200);
 
-	//Keep runtime time
-	run_time_tick_ticks ++;
+
 	system_timer_tick_update(1);
 }
 
@@ -155,16 +155,9 @@ uint32_t timer_get_runtime_ticks(void)  // only used in dev_stats_internal.c
 	return ret_val;
 }
 
-int8_t timer_runtime_ticks_sleep_update(uint32_t sleep_ticks)
-{
-	platform_enter_critical();
-	run_time_tick_ticks += sleep_ticks;
-	system_timer_tick_update(sleep_ticks);
-	platform_exit_critical();
-	return timer_sys_wakeup();
-}
 
-int8_t timer_sys_event(uint8_t snmessage, uint8_t event_type, int8_t tasklet_id, uint32_t time)
+
+int8_t eventOS_event_timer_request(uint8_t snmessage, uint8_t event_type, int8_t tasklet_id, uint32_t time)
 {
 	int8_t res=-1;
 	sys_timer_struct_s * timer = 0;
@@ -194,7 +187,7 @@ int8_t timer_sys_event(uint8_t snmessage, uint8_t event_type, int8_t tasklet_id,
 	return res;
 }
 
-int8_t timer_sys_event_cancel(uint8_t snmessage, int8_t tasklet_id)
+int8_t eventOS_event_timer_cancel(uint8_t snmessage, int8_t tasklet_id)
 {
 	sys_timer_struct_s * cur, *prev = 0;
 	int8_t res=-1;
@@ -264,6 +257,8 @@ void system_timer_tick_update(uint32_t ticks)
 {
 	sys_timer_struct_s * cur, *temp, *prev = 0;
 	platform_enter_critical();
+	//Keep runtime time
+	run_time_tick_ticks += ticks;
 	if(system_timer_list_ptr)
 	{
 		cur = system_timer_list_ptr;
@@ -280,7 +275,7 @@ void system_timer_tick_update(uint32_t ticks)
 				event.event_data = 0;
 				event.cb_fptr = NULL;
 				event.priority = ARM_LIB_MED_PRIORITY_EVENT;
-				arm_ns_event_send(&event);
+				eventOS_event_send(&event);
 				if(prev == 0)
 				{
 					system_timer_list_ptr = cur->next;

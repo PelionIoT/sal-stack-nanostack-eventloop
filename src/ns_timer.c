@@ -28,7 +28,7 @@ int8_t ns_timer_init(void)
 	return 0;
 }
 
-int8_t ns_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t))
+int8_t eventOS_callback_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t))
 {
 	int8_t retval = -1;
 	ns_timer_struct *current_timer;
@@ -97,7 +97,7 @@ int8_t ns_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t))
 	return retval;
 }
 
-int8_t ns_timer_unregister(int8_t ns_timer_id)
+int8_t eventOS_callback_timer_unregister(int8_t ns_timer_id)
 {
 	int8_t retval = -1;
 	ns_timer_struct *current_timer;
@@ -252,7 +252,7 @@ ns_timer_struct *ns_timer_get_pointer_to_timer_struct(int8_t timer_id)
 	return current_timer;
 }
 
-int8_t ns_timer_start(int8_t ns_timer_id, uint16_t slots)
+int8_t eventOS_callback_timer_start(int8_t ns_timer_id, uint16_t slots)
 {
 	int8_t ret_val = 0;
 	uint16_t pl_timer_remaining_slots;
@@ -400,7 +400,7 @@ void ns_timer_interrupt_handler(void)
 	platform_exit_critical();
 }
 
-int8_t ns_timer_stop(int8_t ns_timer_id)
+int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
 {
 	uint16_t pl_timer_remaining_slots;
 	uint8_t active_timer_found = 0;

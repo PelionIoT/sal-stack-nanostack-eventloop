@@ -16,6 +16,7 @@ typedef struct
 extern void timer_sys_init(void);
 
 extern uint32_t timer_get_runtime_ticks(void);
+int8_t timer_sys_wakeup(void);
 
 /**
  * System Timer update and synch after sleep

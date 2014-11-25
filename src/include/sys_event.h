@@ -1,7 +1,6 @@
 #ifndef _SYS_EVENT_H_
 #define _SYS_EVENT_H_
-#include "system_event.h"
-
+#include "eventOS_event.h"
  #ifdef __cplusplus
 extern "C" {
 #endif

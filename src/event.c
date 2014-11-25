@@ -10,7 +10,8 @@
 #include "ns_types.h"
 #include "sys_error.h"
 #include "sys_event.h"
-#include "system_event.h"
+#include "eventOS_event.h"
+#include "eventOS_scheduler.h"
 #include "timer_sys.h"
 #ifdef NS_DEBUG
 #include "platform/ns_debug.h"
@@ -111,7 +112,7 @@ void event_core_write(arm_core_event_s *event);
  }
 
 
- int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*), uint8_t init_event_type)
+ int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s*), uint8_t init_event_type)
  {
 	 int8_t ret_val = 0;
 	 arm_core_tasklet_list_s *new = 0;
@@ -121,7 +122,7 @@ void event_core_write(arm_core_event_s *event);
 	 new = arm_core_tasklet_list;
 	 while(new)
 	 {
-		 if(new->func_ptr == tasklet_func_ptr)
+		 if(new->func_ptr == handler_func_ptr)
 		 {
 			 return -1;
 		 }
@@ -139,7 +140,7 @@ void event_core_write(arm_core_event_s *event);
 		 if(new)
 		 {
 			 new->id = tasklet_get_free_id();
-			 new->func_ptr = tasklet_func_ptr;
+			 new->func_ptr = handler_func_ptr;
 			 if(prev)
 			 {
 				 prev->next = new;
@@ -176,7 +177,7 @@ void event_core_write(arm_core_event_s *event);
 * \return -1 Memory allocation Fail
 *
 */
-int8_t arm_ns_event_send(arm_event_s *event)
+int8_t eventOS_event_send(arm_event_s *event)
 {
 	int8_t retval = -1;
 	arm_core_event_s *event_tmp = event_core_get();
@@ -314,7 +315,7 @@ void event_core_write(arm_core_event_s *event)
 		event_queue_active = event;
 	}
 	/* Wake From Idle */
-	platform_event_os_signal();
+	eventOS_scheduler_signal();
 	platform_exit_critical();
 }
 
@@ -325,7 +326,7 @@ void event_core_write(arm_core_event_s *event)
  * Function Initialize Nanostack Core, Socket Interface,Buffer memory and Send Init event to all Tasklett which are Defined.
  *
  */
-void event_init(void)
+void eventOS_scheduler_init(void)
 {
 	uint8_t i;
 	arm_core_event_s *event = 0;
@@ -359,14 +360,37 @@ void event_init(void)
 }
 
 
-int8_t event_get_active_tasklet(void)
+int8_t eventOS_scheduler_get_active_tasklet(void)
 {
 	return  curr_tasklet;
 }
 
-void event_set_active_tasklet(int8_t tasklet)
+void eventOS_scheduler_set_active_tasklet(int8_t tasklet)
 {
 	curr_tasklet = tasklet;
+}
+
+int eventOS_scheduler_timer_stop(void)
+{
+	timer_sys_disable();
+	if(ns_timer_sleep() != 0)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
+{
+	//Update MS to 10ms ticks
+	sleep_ticks /= 10;
+	sleep_ticks++;
+	system_timer_tick_update(sleep_ticks);
+	if(timer_sys_wakeup() == 0)
+	{
+		return 0;
+	}
+	return -1;
 }
 
 /**
@@ -424,7 +448,7 @@ void event_dispatch_cycle(void)
 	}
 	else
 	{
-		arm_event_os_idle();
+		eventOS_scheduler_idle();
 	}
 }
 
@@ -435,7 +459,7 @@ void event_dispatch_cycle(void)
  * Function Read and handle Cores Event and switch/enable tasklet which are event receiver. WhenEvent queue is empty it goes to sleep
  *
  */
-noreturn void event_dispatch(void)
+noreturn void eventOS_scheduler_run(void)
 {
 	while (1)
 	{
