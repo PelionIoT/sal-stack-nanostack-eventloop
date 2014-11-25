@@ -49,8 +49,6 @@ typedef struct arm_event_s
 	uint32_t event_data;
 } arm_event_s;
 
-typedef void (*idle_cb_t)(void *);
-
 /**
  * \brief This function will be called when stack enter idle state and start waiting signal.
  */
