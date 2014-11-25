@@ -15,37 +15,6 @@ typedef struct
  * */
 extern void timer_sys_init(void);
 
-/**
- * Force system sleep until time (in milliseconds)
- *
- * \param time time to sleep in milliseconds
- *
- * \return none
- *
- * */
-//extern void timer_sys_sleep(uint32_t time);
-
-/**
- * Send an event after time expired (in milliseconds)
- *
- * \param event event to send
- * \param time time to sleep in milliseconds
- *
- * \return none
- *
- * */
-extern int8_t timer_sys_event(uint8_t snmessage, uint32_t time);
-
-/**
- * Cancel an event
- *
- * \param event event to cancel
- *
- * \return none
- *
- * */
-extern int8_t timer_sys_event_cancel(uint8_t snmessage);
-
 extern uint32_t timer_get_runtime_ticks(void);
 
 /**
@@ -57,14 +26,5 @@ extern uint32_t timer_get_runtime_ticks(void);
  *
  * */
 void system_timer_tick_update(uint32_t ticks);
-/**
- * System Timer shortest time in milli seconds
- *
- * \param ticks Time in 10 ms resolution
- *
- * \return none
- *
- * */
-uint32_t system_timer_shortest_time(void);
 
 #endif /*_PL_NANO_TIMER_SYS_H_*/

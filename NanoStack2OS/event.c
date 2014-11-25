@@ -34,8 +34,6 @@ static arm_core_tasklet_list_s * arm_core_tasklet_list = 0;
 static arm_core_event_s * event_queue_active = 0;
 static arm_core_event_s * free_event_entry = 0;
 static int8_t tasklet_dyn_counter = 0;
-static idle_cb_t event_idle_cb = NULL;
-static void *event_idle_cb_param = NULL;
 
 /** Curr_tasklet tell to core and platform which task_let is active, Core Update this automatic when switch Tasklet. */
 int8_t curr_tasklet = 0;
@@ -169,6 +167,15 @@ void event_core_write(arm_core_event_s *event);
 	 return ret_val;
  }
 
+/**
+* \brief Send event to  event scheduler.
+*
+* \param event pointer to pushed event.
+*
+* \return 0 Event push OK
+* \return -1 Memory allocation Fail
+*
+*/
 int8_t arm_ns_event_send(arm_event_s *event)
 {
 	int8_t retval = -1;
@@ -351,18 +358,6 @@ void event_init(void)
 
 }
 
-/**
- *
- * \brief Register idle callback.
- *
- * This function will be called when idle
- *
- */
-void event_register_idle_cb(idle_cb_t idle_cb, void *idle_cb_param)
-{
-	event_idle_cb = idle_cb;
-	event_idle_cb_param = idle_cb_param;
-}
 
 int8_t event_get_active_tasklet(void)
 {
@@ -411,7 +406,6 @@ void event_dispatch_cycle(void)
 			curr_tasklet = 0;
 		}
 		else
-		//if(event.receiver > 0)
 		{
 			tasklet = event_tasklet_handler_get(event.receiver);
 			if(tasklet)
@@ -430,10 +424,6 @@ void event_dispatch_cycle(void)
 	}
 	else
 	{
-		if (event_idle_cb != NULL)
-		{
-			event_idle_cb(event_idle_cb_param);
-		}
 		arm_event_os_idle();
 	}
 }

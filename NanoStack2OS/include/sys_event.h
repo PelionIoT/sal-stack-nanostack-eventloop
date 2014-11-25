@@ -29,19 +29,6 @@ typedef struct arm_core_event_s
 	struct arm_core_event_s * next;
 }arm_core_event_s;
 
-extern int8_t arm_ns_event_send(arm_event_s *event);
-/**
- * Event loop
- */
-extern noreturn void event_dispatch(void);
-
-extern int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*));
-/**
- * \brief Event dispatch loop idle Callback
- *
- *
- */
-//extern void arm_event_os_idle(void);
  #ifdef __cplusplus
 }
 #endif
