@@ -6,6 +6,7 @@ typedef struct sys_timer_struct_s
 	uint32_t timer_sys_launch_time;
 	int8_t timer_sys_launch_receiver;
 	uint8_t timer_sys_launch_message;
+	uint8_t timer_event_type;
 	struct sys_timer_struct_s *next;
 } sys_timer_struct_s;
 

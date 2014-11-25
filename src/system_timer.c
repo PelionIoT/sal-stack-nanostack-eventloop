@@ -12,6 +12,7 @@
 #include "platform/ns_debug.h"
 #include "ns_timer.h"
 #include "nsdynmemLIB.h"
+#include "system_event.h"
 
 #ifndef ST_MAX
 #define ST_MAX 6
@@ -160,10 +161,10 @@ int8_t timer_runtime_ticks_sleep_update(uint32_t sleep_ticks)
 	run_time_tick_ticks += sleep_ticks;
 	system_timer_tick_update(sleep_ticks);
 	platform_exit_critical();
-	return = timer_sys_wakeup();
+	return timer_sys_wakeup();
 }
 
-int8_t timer_sys_event(uint8_t snmessage, uint32_t time)
+int8_t timer_sys_event(uint8_t snmessage, uint8_t event_type, int8_t tasklet_id, uint32_t time)
 {
 	int8_t res=-1;
 	sys_timer_struct_s * timer = 0;
@@ -182,7 +183,8 @@ int8_t timer_sys_event(uint8_t snmessage, uint32_t time)
 	if(timer)
 	{
 		timer->timer_sys_launch_message = snmessage;
-		timer->timer_sys_launch_receiver = event_get_active_tasklet();
+		timer->timer_sys_launch_receiver = tasklet_id;
+		timer->timer_event_type = event_type;
 		timer->timer_sys_launch_time = time;
 		timer->next = system_timer_list_ptr;
 		system_timer_list_ptr = timer;
@@ -192,19 +194,17 @@ int8_t timer_sys_event(uint8_t snmessage, uint32_t time)
 	return res;
 }
 
-int8_t timer_sys_event_cancel(uint8_t snmessage)
+int8_t timer_sys_event_cancel(uint8_t snmessage, int8_t tasklet_id)
 {
-	uint8_t temp;
 	sys_timer_struct_s * cur, *prev = 0;
 	int8_t res=-1;
-	temp = event_get_active_tasklet();
 	platform_enter_critical();
 	if(system_timer_list_ptr)
 	{
 		cur = system_timer_list_ptr;
 		while(cur)
 		{
-			if(cur->timer_sys_launch_receiver == temp && cur->timer_sys_launch_message == snmessage)
+			if(cur->timer_sys_launch_receiver == tasklet_id && cur->timer_sys_launch_message == snmessage)
 			{
 				if(prev == 0)
 				{
@@ -264,9 +264,9 @@ void system_timer_tick_update(uint32_t ticks)
 {
 	sys_timer_struct_s * cur, *temp, *prev = 0;
 	platform_enter_critical();
-	if(sytem_timer_list_ptr)
+	if(system_timer_list_ptr)
 	{
-		cur = sytem_timer_list_ptr;
+		cur = system_timer_list_ptr;
 		while(cur)
 		{
 			if(cur->timer_sys_launch_time <= ticks)
@@ -275,13 +275,14 @@ void system_timer_tick_update(uint32_t ticks)
 				event.receiver = cur->timer_sys_launch_receiver;
 				event.sender = 0; /**< Event sender Tasklet ID */
 				event.data_ptr = 0;
-				event.event_type = ARM_LIB_SYSTEM_TIMER_EVENT;
+				event.event_type = cur->timer_event_type;
 				event.event_id = cur->timer_sys_launch_message;
 				event.event_data = 0;
-				event_send_internal(&event);
+				event.priority = ARM_LIB_MED_PRIORITY_EVENT;
+				arm_ns_event_send(&event);
 				if(prev == 0)
 				{
-					sytem_timer_list_ptr = cur->next;
+					system_timer_list_ptr = cur->next;
 				}
 				else
 				{

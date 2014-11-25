@@ -111,7 +111,7 @@ void event_core_write(arm_core_event_s *event);
  }
 
 
- int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*))
+ int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*), uint8_t init_event_type)
  {
 	 int8_t ret_val = 0;
 	 arm_core_tasklet_list_s *new = 0;
@@ -153,7 +153,7 @@ void event_core_write(arm_core_event_s *event);
 			{
 				event_tmp->receiver = new->id;
 				event_tmp->sender = 0;
-				event_tmp->event_type = ARM_LIB_TASKLET_INIT_EVENT; //Function Pointer
+				event_tmp->event_type = init_event_type; //Function Pointer
 				event_tmp->event_data = 0;
 				event_core_write(event_tmp);
 				ret_val = new->id;

@@ -109,13 +109,13 @@ extern int8_t timer_runtime_ticks_sleep_update(uint32_t sleep_ticks);
 /**
  * Send an event after time expired (in milliseconds)
  *
- * \param event event to send
+ * \param snmessage event to send
  * \param time time to sleep in milliseconds
  *
  * \return none
  *
  * */
-extern int8_t timer_sys_event(uint8_t snmessage, uint32_t time);
+extern int8_t timer_sys_event(uint8_t snmessage, uint8_t event_type, int8_t tasklet_id, uint32_t time);
 /**
  * Cancel an event
  *
@@ -124,7 +124,7 @@ extern int8_t timer_sys_event(uint8_t snmessage, uint32_t time);
  * \return none
  *
  * */
-extern int8_t timer_sys_event_cancel(uint8_t snmessage);
+extern int8_t timer_sys_event_cancel(uint8_t snmessage, int8_t tasklet_id);
 
 /**
  * System Timer shortest time in milli seconds
@@ -160,12 +160,13 @@ extern  void event_set_active_tasklet(int8_t tasklet);
  * Function will register and allocate unique event id handler
  *
  * \param tasklet_func_ptr function pointer for event handler
+ * \param init_event_type generated evevnt type for init purpose
  *
  * \return >= 0 Unique event ID for this handler
  * \return < 0 Register fail
  *
  * */
-extern int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*));
+extern int8_t arm_ns_tasklet_create(void (*tasklet_func_ptr)(arm_event_s*), uint8_t init_event_type);
 
 
 #ifdef __cplusplus
