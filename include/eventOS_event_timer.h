@@ -10,6 +10,8 @@
  #ifdef __cplusplus
 extern "C" {
 #endif
+#include "ns_types.h"
+
 /**
  * Send an event after time expired (in milliseconds)
  *
