@@ -10,18 +10,6 @@ extern "C" {
 
 #include "ns_types.h"
 
- /**
-  * \enum error_t
-  * \brief System generic error.
-  */
-typedef enum error_t
-{
-	eOK = 0,	/*!< no error */
-	eFALSE = 1, /*!< no result */
-	eBUSY = 2,	/*!< resource busy */
-	eSYSTEM		/*!< error code readable in sys_error */
-}error_t;
-
 /**
  * \enum arm_library_event_priority_e
  * \brief Event Priority level.
