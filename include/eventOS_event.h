@@ -34,7 +34,6 @@ typedef struct arm_event_s
 	uint8_t event_type; /**< This will be typecast arm_library_event_type_e */
 	uint8_t event_id; /**< Timer ID, NWK interface ID or application specific ID */
 	void *data_ptr; /**< Application could share data pointer tasklet to tasklet */
-	void (*cb_fptr)(uint8_t); /**< Application could share data pointer tasklet to tasklet */
 	arm_library_event_priority_e priority;
 	uint32_t event_data;
 } arm_event_s;

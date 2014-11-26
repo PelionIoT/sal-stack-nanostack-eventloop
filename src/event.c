@@ -189,7 +189,6 @@ int8_t eventOS_event_send(arm_event_s *event)
 		event_tmp->event_data = event->event_data;
 		event_tmp->event_id = event->event_id; //Function Pointer
 		event_tmp->data_ptr = event->data_ptr;
-		event_tmp->cb_fptr = event->cb_fptr;
 		event_tmp->priority = event->priority;
 		event_core_write(event_tmp);
 		retval = 0;
@@ -204,10 +203,9 @@ static arm_core_event_s * event_dynamically_allocate(void)
 	event = (arm_core_event_s *) ns_dyn_mem_alloc(sizeof(arm_core_event_s));
 	if(event)
 	{
-		event->data_ptr = 0;
-		event->cb_fptr = 0;
+		event->data_ptr = NULL;
 		event->priority = ARM_LIB_LOW_PRIORITY_EVENT;
-		event->next = 0;
+		event->next = NULL;
 	}
 	return event;
 }
@@ -218,7 +216,7 @@ static arm_core_tasklet_list_s * tasklet_dynamically_allocate(void)
 	event = (arm_core_tasklet_list_s *) ns_dyn_mem_alloc(sizeof(arm_core_tasklet_list_s));
 	if(event)
 	{
-		event->next = 0;
+		event->next = NULL;
 	}
 	return event;
 }
@@ -233,10 +231,9 @@ arm_core_event_s * event_core_get(void)
 
 		event = free_event_entry;
 		free_event_entry = free_event_entry->next;
-		event->data_ptr = 0;
-		event->cb_fptr = 0;
+		event->data_ptr = NULL;
 		event->priority = ARM_LIB_LOW_PRIORITY_EVENT;
-		event->next = 0;
+		event->next = NULL;
 	}
 	else
 	{
@@ -293,13 +290,13 @@ void event_core_write(arm_core_event_s *event)
 					event->next = event_tmp;
 					event_queue_active = event;
 				}
-				event_tmp = 0;
+				event_tmp = NULL;
 			}
 			else if(event_tmp->next == 0)
 			{
 				//New Last
 				event_tmp->next = event;
-				event_tmp = 0;
+				event_tmp = NULL;
 			}
 			else
 			{
@@ -329,14 +326,14 @@ void event_core_write(arm_core_event_s *event)
 void eventOS_scheduler_init(void)
 {
 	uint8_t i;
-	arm_core_event_s *event = 0;
+	arm_core_event_s *event = NULL;
 
 	/* Reset Event Ringbuffer variables */
 	i=10;
 	//Allocate 10 entry
-	free_event_entry = 0;
-	event_queue_active = 0;
-	arm_core_tasklet_list = 0;
+	free_event_entry = NULL;
+	event_queue_active = NULL;
+	arm_core_tasklet_list = NULL;
 	while(i--)
 	{
 		event = event_dynamically_allocate();
@@ -413,37 +410,22 @@ void event_dispatch_cycle(void)
 		event.receiver = cur_event->receiver;
 		event.sender = cur_event->sender;
 		event.data_ptr = cur_event->data_ptr;
-		event.cb_fptr = cur_event->cb_fptr;
 		event.event_data = cur_event->event_data;
 		event.event_id = cur_event->event_id;
 		event.event_type = cur_event->event_type;
 		event_core_free_push(cur_event);
-
-
-		if(event.cb_fptr)
+		tasklet = event_tasklet_handler_get(event.receiver);
+		if(tasklet)
 		{
-			uint8_t event_data;
-			curr_tasklet = 0;
-			event_data = event.event_data;
-
-			event.cb_fptr(event_data);
+			curr_tasklet = event.receiver;
+			/* Tasklet Sceduler Call */
+			tasklet->func_ptr(&event);
+			/* Set Current Tasklet to Idle state */
 			curr_tasklet = 0;
 		}
 		else
 		{
-			tasklet = event_tasklet_handler_get(event.receiver);
-			if(tasklet)
-			{
-				curr_tasklet = event.receiver;
-				/* Tasklet Sceduler Call */
-				tasklet->func_ptr(&event);
-				/* Set Current Tasklet to Idle state */
-				curr_tasklet = 0;
-			}
-			else
-			{
-				debug("NO Task1\n");
-			}
+			debug("NO Task1\n");
 		}
 	}
 	else
