@@ -22,7 +22,6 @@ typedef struct arm_core_event_s
 	uint8_t event_type; /**< This will be typecast arm_library_event_type_e, arm_internal_event_type_e or application specific define */
 	uint8_t event_id; /**< Timer ID or NWK interface ID */
 	void *data_ptr; /**< Library could share data inside or application tasklet together.*/
-	void (* cb_fptr)(uint8_t);
 	uint32_t event_data;
 	arm_library_event_priority_e priority;
 	struct arm_core_event_s * next;

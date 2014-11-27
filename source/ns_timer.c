@@ -7,7 +7,7 @@
 #include "platform/arm_hal_timer.h"
 #include "nsdynmemLIB.h"
 
-static ns_timer_struct *ns_timer_list=0;
+static ns_timer_struct *ns_timer_list=NULL;
 
 
 #define NS_TIMER_RUNNING	1
@@ -86,7 +86,7 @@ int8_t eventOS_callback_timer_register(void (*timer_interrupt_handler)(int8_t, u
 	if(current_timer)
 	{
 		current_timer->ns_timer_id = retval;
-		current_timer->next_timer = 0;
+		current_timer->next_timer = NULL;
 		current_timer->timer_state = NS_TIMER_STOP;
 		current_timer->remaining_slots = 0;
 		current_timer->interrupt_handler = timer_interrupt_handler;
@@ -175,7 +175,7 @@ int8_t ns_timer_get_next_running_to(void)
 {
 	uint8_t i = 0;
 
-	ns_timer_struct *timer_tmp = 0;
+	ns_timer_struct *timer_tmp = NULL;
 	ns_timer_struct *current_timer;
 
 	/*Find hold-labelled timer with the less remaining slots*/
@@ -405,7 +405,7 @@ int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
 	uint16_t pl_timer_remaining_slots;
 	uint8_t active_timer_found = 0;
 	ns_timer_struct *current_timer;
-	ns_timer_struct *timer_tmp = 0;
+	ns_timer_struct *timer_tmp = NULL;
 	int8_t retval = -1;
 
 
