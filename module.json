@@ -1,6 +1,6 @@
 {
   "name": "nanostack-event-loop",
-  "version": "0.0.0-yotta",
+  "version": "0.0.0-yotta3",
   "description": "Nanostack Event Loop",
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
@@ -14,8 +14,8 @@
     "nanostack-event-loop"
   ],
   "dependencies": {
-    "libservice": "git://git.oulu.arm.com/nanomesh/libService.git#2.0.0-yotta",
-    "nanostack": "ssh://git.oulu.arm.com/home/git/repositories/nanomesh/nanostack.git#2.0.0-yotta",
+    "libservice": "git://git.oulu.arm.com/nanomesh/libService.git#^2.0.0-yotta",
+    "nanostack": "git://git.oulu.arm.com/nanomesh/nanostack.git#^2.0.0-yotta2",
     "nanostack-eventos-mbed": "ARMmbed/nanostack-eventos-mbed"
   },
   "targetDependencies": {}
