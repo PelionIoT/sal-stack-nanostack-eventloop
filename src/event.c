@@ -180,18 +180,21 @@ void event_core_write(arm_core_event_s *event);
 int8_t eventOS_event_send(arm_event_s *event)
 {
 	int8_t retval = -1;
-	arm_core_event_s *event_tmp = event_core_get();
-	if(event_tmp)
+	if(event_tasklet_handler_get(event->receiver))
 	{
-		event_tmp->receiver = event->receiver;
-		event_tmp->sender = event->sender;
-		event_tmp->event_type = event->event_type; //Function Pointer
-		event_tmp->event_data = event->event_data;
-		event_tmp->event_id = event->event_id; //Function Pointer
-		event_tmp->data_ptr = event->data_ptr;
-		event_tmp->priority = event->priority;
-		event_core_write(event_tmp);
-		retval = 0;
+		arm_core_event_s *event_tmp = event_core_get();
+		if(event_tmp)
+		{
+			event_tmp->receiver = event->receiver;
+			event_tmp->sender = event->sender;
+			event_tmp->event_type = event->event_type; //Function Pointer
+			event_tmp->event_data = event->event_data;
+			event_tmp->event_id = event->event_id; //Function Pointer
+			event_tmp->data_ptr = event->data_ptr;
+			event_tmp->priority = event->priority;
+			event_core_write(event_tmp);
+			retval = 0;
+		}
 	}
 	return retval;
 }
