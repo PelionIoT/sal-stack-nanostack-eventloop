@@ -5,10 +5,10 @@
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
   "repository": {
-    "url": "ssh://git.oulu.arm.com/home/git/repositories/nanomesh/event-loop.git",
+    "url": "git@github.com:ARMmbed/nanomesh-eventloop.git",
     "type": "git"
   },
-  "homepage": "http://git.oulu.arm.com/gitweb/?p=nanomesh/event-loop.git;a=summary",
+  "homepage": "https://github.com/ARMmbed/nanomesh-eventloop",
   "license": "Proprietary, all rights reserved.",
   "extraIncludes": [
     "nanostack-event-loop"
