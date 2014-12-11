@@ -15,7 +15,7 @@
   ],
   "dependencies": {
     "libservice": "ARMmbed/nanomesh-libService#~0.0.3",
-    "nanostack": "RMmbed/nanomesh-nanostack#~0.0.3",
+    "nanostack": "ARMmbed/nanomesh-nanostack#~0.0.3",
     "nanostack-eventos-mbed": "ARMmbed/nanostack-eventos-mbed"
   },
   "targetDependencies": {}
