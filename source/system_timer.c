@@ -1,8 +1,5 @@
 /*
- * system_timer.c
- *
- *  Created on: 14 Jan 2014
- *      Author: jarpas01
+ * Copyright (c) 2014 ARM. All rights reserved.
  */
 #include "ns_types.h"
 #include "sys_error.h"

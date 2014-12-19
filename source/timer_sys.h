@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 ARM. All rights reserved.
+ */
 #ifndef _PL_NANO_TIMER_SYS_H_
 #define _PL_NANO_TIMER_SYS_H_
 

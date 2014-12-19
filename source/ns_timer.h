@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 ARM. All rights reserved.
+ */
 #ifndef NS_TIMER_H_
 #define NS_TIMER_H_
 
