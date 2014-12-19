@@ -1,10 +1,6 @@
 /*
- * \file eventOS_callback_timer.h
- * \brief Add short description about this file!!!
- * Copyrigth Sensinode Ltd 2013
- *
+ * Copyright (c) 2014 ARM. All rights reserved.
  */
-
 #ifndef EVENTOS_CALLBACK_TIMER_H_
 #define EVENTOS_CALLBACK_TIMER_H_
  #ifdef __cplusplus
