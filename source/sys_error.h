@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 ARM. All rights reserved.
+ */
 #ifndef _SYS_ERROR_H_
 #define _SYS_ERROR_H_
 

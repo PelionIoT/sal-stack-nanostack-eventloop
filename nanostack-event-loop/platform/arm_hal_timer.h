@@ -1,10 +1,6 @@
 /*
- * arm_hal_timer.h
- *
- *  Created on: 14 Jan 2014
- *      Author: jarpas01
+ * Copyright (c) 2014 ARM. All rights reserved.
  */
-
 #ifndef ARM_HAL_TIMER_H_
 #define ARM_HAL_TIMER_H_
  #ifdef __cplusplus

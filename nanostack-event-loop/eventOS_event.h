@@ -1,10 +1,6 @@
 /*
- * \file eventOS_event.h
- * \brief Add short description about this file!!!
- * Copyrigth Sensinode Ltd 2013
- *
+ * Copyright (c) 2014 ARM. All rights reserved.
  */
-
 #ifndef EVENTOS_EVENT_H_
 #define EVENTOS_EVENT_H_
  #ifdef __cplusplus

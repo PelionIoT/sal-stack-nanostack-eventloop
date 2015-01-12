@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 ARM. All rights reserved.
+ */
 #include "ns_types.h"
 #include "sys_error.h"
 #include "sys_event.h"

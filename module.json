@@ -1,0 +1,22 @@
+{
+  "name": "nanostack-event-loop",
+  "version": "0.0.4",
+  "description": "Nanostack Event Loop",
+  "keywords": [],
+  "author": "Seppo Takalo <seppo.takalo@arm.com>",
+  "repository": {
+    "url": "git@github.com:ARMmbed/nanomesh-eventloop.git",
+    "type": "git"
+  },
+  "homepage": "https://github.com/ARMmbed/nanomesh-eventloop",
+  "license": "Proprietary, all rights reserved.",
+  "extraIncludes": [
+    "nanostack-event-loop"
+  ],
+  "dependencies": {
+    "libservice": "ARMmbed/nanomesh-libService#~0.0.3",
+    "nanostack": "ARMmbed/nanomesh-nanostack#~0.0.3",
+    "nanostack-eventos-mbed": "ARMmbed/nanostack-eventos-mbed"
+  },
+  "targetDependencies": {}
+}

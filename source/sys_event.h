@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 ARM. All rights reserved.
+ */
 #ifndef _SYS_EVENT_H_
 #define _SYS_EVENT_H_
 #include "eventOS_event.h"
