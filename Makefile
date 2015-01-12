@@ -20,7 +20,7 @@ override CFLAGS += -I nanostack-event-loop
 # External sources from libService
 #
 SERVLIB_DIR := ../libService
-override CFLAGS += -I$(SERVLIB_DIR)/include
+override CFLAGS += -I$(SERVLIB_DIR)/libService
 
 $(eval $(call generate_rules,$(LIB),$(SRCS)))
 
