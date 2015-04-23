@@ -1,6 +1,6 @@
 {
   "name": "mbed-6lowpan-eventloop",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Event loop for 6LoWPAN stack",
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
@@ -14,8 +14,8 @@
     "nanostack-event-loop"
   ],
   "dependencies": {
-    "mbed-client-libservice" : "ARMmbed/mbed-client-libservice",
-    "mbed-6lowpan-eventloop-adaptor" : "ARMmbed/mbed-6lowpan-eventloop-adaptor"
+    "mbed-client-libservice": "ARMmbed/mbed-client-libservice",
+    "mbed-6lowpan-eventloop-adaptor": "ARMmbed/mbed-6lowpan-eventloop-adaptor"
   },
   "targetDependencies": {}
 }
