@@ -14,8 +14,8 @@
     "nanostack-event-loop"
   ],
   "dependencies": {
-    "mbed-client-libservice": "ARMmbed/mbed-client-libservice",
-    "mbed-6lowpan-eventloop-adaptor": "ARMmbed/mbed-6lowpan-eventloop-adaptor"
+    "mbed-client-libservice": "~2.0.9",
+    "mbed-6lowpan-eventloop-adaptor": "~0.0.6"
   },
   "targetDependencies": {}
 }
