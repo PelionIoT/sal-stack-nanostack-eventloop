@@ -16,7 +16,8 @@ extern void platform_timer_enable(void);
  * \param new_fp Function pointer for stack giving timer handler
  *
  */
-extern void platform_timer_set_cb(void (*new_fp)(void));
+typedef void (*platform_timer_cb)(void);
+extern void platform_timer_set_cb(platform_timer_cb new_fp);
 /**
  * \brief This function is API for stack timer start
  *
