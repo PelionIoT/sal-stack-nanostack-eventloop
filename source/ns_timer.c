@@ -30,6 +30,7 @@ static NS_LIST_DEFINE(ns_timer_list, ns_timer_struct, link);
 
 #define NS_TIMER_RUNNING    1
 static uint8_t ns_timer_state = 0;
+static uint16_t cb_timer_divider = 1;
 
 #ifdef ATMEGA256RFR2
 #define COMPENSATION 3
@@ -87,6 +88,15 @@ int8_t eventOS_callback_timer_register(void (*timer_interrupt_handler)(int8_t, u
     return retval;
 }
 
+int8_t eventOS_callback_divide_resolution(uint16_t divider)
+{
+    if (divider > MAX_CB_TIMER_DIVIDER)
+        return -1;
+    cb_timer_divider = divider;
+    return 0;
+}
+
+
 int8_t eventOS_callback_timer_unregister(int8_t ns_timer_id)
 {
     ns_timer_struct *current_timer;
@@ -109,6 +119,8 @@ int8_t eventOS_callback_timer_unregister(int8_t ns_timer_id)
 
 static int8_t ns_timer_start_pl_timer(uint16_t pl_timer_start_slots)
 {
+
+
     /*Don't start timer with 0 slots*/
     if (!pl_timer_start_slots) {
         pl_timer_start_slots = 1;
@@ -204,6 +216,8 @@ int8_t eventOS_callback_timer_start(int8_t ns_timer_id, uint16_t slots)
     uint16_t pl_timer_remaining_slots;
     ns_timer_struct *timer;
     platform_enter_critical();
+
+    slots /= cb_timer_divider;
 
     /*Find timer to be activated*/
     timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
