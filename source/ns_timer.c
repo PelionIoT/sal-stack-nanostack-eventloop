@@ -387,3 +387,28 @@ exit:
 
     return retval;
 }
+
+uint16_t eventOS_callback_get_remaining_time(int8_t ns_timer_id)
+{
+	ns_timer_struct *current_timer;
+
+	platform_enter_critical();
+	/*Find timer with given timer ID*/
+	current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
+	if(current_timer)
+	{
+		if(current_timer->timer_state == NS_TIMER_HOLD)
+		{
+			platform_exit_critical();
+			return (current_timer->remaining_slots + platform_timer_get_remaining_slots());
+		}
+		if(current_timer->timer_state == NS_TIMER_ACTIVE)
+		{
+			platform_exit_critical();
+			return platform_timer_get_remaining_slots();
+		}
+	}
+	platform_exit_critical();
+
+	return 0;
+}

@@ -14,6 +14,7 @@ extern int8_t eventOS_callback_timer_unregister(int8_t ns_timer_id);
 
 extern int8_t eventOS_callback_timer_stop(int8_t ns_timer_id);
 extern int8_t eventOS_callback_timer_start(int8_t ns_timer_id, uint16_t slots);
+extern uint16_t eventOS_callback_get_remaining_time(int8_t ns_timer_id);
 #ifdef __cplusplus
 }
 #endif
