@@ -11,6 +11,7 @@ SRCS += \
 		source/event.c \
 		source/ns_timer.c \
 		source/system_timer.c\
+		source/timeout.c
 
 include ../libService/toolchain_rules.mk
 
