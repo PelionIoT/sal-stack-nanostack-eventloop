@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.toolchain.gnu.cross.base.1189539176">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.cross.base.1189539176" moduleId="org.eclipse.cdt.core.settings" name="ArmCC Cortex-M3">
@@ -26,8 +24,8 @@
 							<builder buildPath="${workspace_loc:/eventOS}/" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="cdt.managedbuild.builder.gnu.cross.836533860" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool errorParsers="" id="cdt.managedbuild.tool.gnu.cross.c.compiler.499691915" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option id="gnu.c.compiler.option.include.paths.1009581990" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libService/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ARMCC_INCLUDE}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libService/libService}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.490997078" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -72,8 +70,8 @@
 							<builder buildPath="${workspace_loc:/eventOS}/" enabledIncrementalBuild="true" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="cdt.managedbuild.builder.gnu.cross.1363458610" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool errorParsers="" id="cdt.managedbuild.tool.gnu.cross.c.compiler.435164393" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option id="gnu.c.compiler.option.include.paths.241649509" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libService/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ARMCC_INCLUDE}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libService/libService}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1949795978" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
