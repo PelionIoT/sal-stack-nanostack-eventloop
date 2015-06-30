@@ -27,3 +27,7 @@ $(eval $(call generate_rules,$(LIB),$(SRCS)))
 .PHONY: release
 release:
 	7z a edtls-lib_$(VERSION).zip *.a *.lib include
+
+.PHONY: deploy_to
+deploy_to: all
+	tar --transform 's,^,event-loop/,' --append -f $(TO) *.a
