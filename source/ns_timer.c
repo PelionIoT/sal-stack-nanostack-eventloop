@@ -2,15 +2,32 @@
  * Copyright (c) 2014 ARM. All rights reserved.
  */
 #include "ns_types.h"
-#include "sys_error.h"
-#include "sys_event.h"
+#include "ns_list.h"
 #include "ns_timer.h"
-#include "platform/ns_debug.h"
+#include "eventOS_callback_timer.h"
 #include "platform/arm_hal_interrupt.h"
 #include "platform/arm_hal_timer.h"
 #include "nsdynmemLIB.h"
 
-static ns_timer_struct *ns_timer_list=NULL;
+typedef enum ns_timer_state_e
+{
+	NS_TIMER_ACTIVE = 0,		// Will run on the next HAL interrupt
+	NS_TIMER_HOLD,				// Will run on a later HAL interrupt
+	NS_TIMER_RUN_INTERRUPT,		// Running on the interrupt we're currently handling
+	NS_TIMER_STOP				// Timer not scheduled ("start" not called since last callback)
+}ns_timer_state_e;
+
+typedef struct ns_timer_struct
+{
+	int8_t ns_timer_id;
+	ns_timer_state_e timer_state;
+	uint16_t slots;
+	uint16_t remaining_slots;
+	void (*interrupt_handler)(int8_t, uint16_t);
+	ns_list_link_t link;
+} ns_timer_struct;
+
+static NS_LIST_DEFINE(ns_timer_list, ns_timer_struct, link);
 
 
 #define NS_TIMER_RUNNING	1
@@ -24,6 +41,9 @@ static uint8_t ns_timer_state = 0;
 #define COMPENSATION_TUNE 0
 #endif
 
+static void ns_timer_interrupt_handler(void);
+static ns_timer_struct *ns_timer_get_pointer_to_timer_struct(int8_t timer_id);
+
 int8_t ns_timer_init(void)
 {
 	/*Set interrupt handler in HAL driver*/
@@ -34,106 +54,61 @@ int8_t ns_timer_init(void)
 int8_t eventOS_callback_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t))
 {
 	int8_t retval = -1;
-	ns_timer_struct *current_timer;
 
-	if(ns_timer_list)
+	/*Find first free timer ID in timer list*/
+	/*(Note use of uint8_t to avoid overflow if we reach 0x7F)*/
+	for (uint8_t i = 0; i <= INT8_MAX; i++)
 	{
-		int8_t i = 0;
-		/*Find first free timer ID in timer list*/
-		do
+		if (!ns_timer_get_pointer_to_timer_struct(i))
 		{
-			current_timer = ns_timer_list;
-			while(current_timer)
-			{
-				if(current_timer->ns_timer_id == i)
-					break;
-				else
-					current_timer = current_timer->next_timer;
-			}
-			if(!current_timer)
-			{
-				retval = i;
-				i=0;
-			}
-			else
-				i++;
-		}while(i);
-
-		if(retval >= 0)
-		{
-			/*Find first free next timer -pointer in timer list*/
-			current_timer = ns_timer_list;
-			while(current_timer)
-			{
-				if(!current_timer->next_timer)
-					break;
-				else
-					current_timer = current_timer->next_timer;
-			}
-			/*Allocate memory for timer structure*/
-			if(current_timer)
-			{
-				current_timer->next_timer = ns_dyn_mem_alloc(sizeof(ns_timer_struct));
-				if(current_timer->next_timer)
-					current_timer = current_timer->next_timer;
-			}
+			retval = i;
+			break;
 		}
 	}
-	else
-	{
-		ns_timer_list = ns_dyn_mem_alloc(sizeof(ns_timer_struct));
-		current_timer = ns_timer_list;
-		retval = 0;
-	}
+
+	if(retval == -1)
+		return -1;
+
+	ns_timer_struct *new_timer = ns_dyn_mem_alloc(sizeof(ns_timer_struct));
+	if(!new_timer)
+		return -1;
+
 	/*Initialise new timer*/
-	if(current_timer)
-	{
-		current_timer->ns_timer_id = retval;
-		current_timer->next_timer = NULL;
-		current_timer->timer_state = NS_TIMER_STOP;
-		current_timer->remaining_slots = 0;
-		current_timer->interrupt_handler = timer_interrupt_handler;
-	}
-	else
-		retval = -1;
+	new_timer->ns_timer_id = retval;
+	new_timer->timer_state = NS_TIMER_STOP;
+	new_timer->remaining_slots = 0;
+	new_timer->interrupt_handler = timer_interrupt_handler;
+
+	// Critical section sufficient as long as list can't be reordered from
+	// interrupt, otherwise will need to cover whole routine
+	platform_enter_critical();
+	ns_list_add_to_end(&ns_timer_list, new_timer);
+	platform_exit_critical();
+
 	/*Return timer ID*/
 	return retval;
 }
 
 int8_t eventOS_callback_timer_unregister(int8_t ns_timer_id)
 {
-	int8_t retval = -1;
 	ns_timer_struct *current_timer;
-	ns_timer_struct *tmp_timer;
 
 	current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
-	if(current_timer)
-	{
-		tmp_timer = ns_timer_list;
-		while(tmp_timer)
-		{
-			if(tmp_timer->next_timer == current_timer)
-			{
-				break;
-			}
-			tmp_timer = tmp_timer->next_timer;
-		}
-		if(tmp_timer)
-		{
-			tmp_timer->next_timer = current_timer->next_timer;
-		}
-		else if(current_timer->next_timer)
-		{
-			ns_timer_list = current_timer->next_timer;
-		}
-		ns_dyn_mem_free(current_timer);
-		retval = 0;
-	}
-	return retval;
+	if(!current_timer)
+		return -1;
+
+	// Critical section sufficient as long as list can't be reordered from
+	// interrupt, otherwise will need to cover whole routine
+	platform_enter_critical();
+	ns_list_remove(&ns_timer_list, current_timer);
+	platform_exit_critical();
+
+	ns_dyn_mem_free(current_timer);
+	return 0;
 }
 
 
-int8_t ns_timer_start_pl_timer(uint16_t pl_timer_start_slots)
+static int8_t ns_timer_start_pl_timer(uint16_t pl_timer_start_slots)
 {
 	/*Don't start timer with 0 slots*/
 	if(!pl_timer_start_slots)
@@ -160,80 +135,56 @@ int8_t ns_timer_sleep(void)
 	return ret_val;
 }
 
-int8_t ns_timer_wake_up(void)
+static int8_t ns_timer_get_next_running_to(void)
 {
-	int8_t ret_val = -1;
-	if((ns_timer_state & NS_TIMER_RUNNING) == 0)
-	{
-		/*Start HAL timer*/
-		platform_timer_start(2);
-		/*Set HAL timer state to running*/
-		ns_timer_state |= NS_TIMER_RUNNING;
-		ret_val = 0;
-	}
-	return ret_val;
-}
+	uint8_t hold_count = 0;
+	ns_timer_struct *first_timer = NULL;
 
-int8_t ns_timer_get_next_running_to(void)
-{
-	uint8_t i = 0;
-
-	ns_timer_struct *timer_tmp = NULL;
-	ns_timer_struct *current_timer;
-
-	/*Find hold-labelled timer with the less remaining slots*/
-	current_timer = ns_timer_list;
-	while(current_timer)
+	/*Find hold-labelled timer with the least remaining slots*/
+	ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
 	{
 		if(current_timer->timer_state == NS_TIMER_HOLD)
 		{
-			if(timer_tmp)
+			if(!first_timer || current_timer->remaining_slots < first_timer->remaining_slots)
 			{
-				if(current_timer->remaining_slots < timer_tmp->remaining_slots)
-				{
-					timer_tmp = current_timer;
-				}
+				first_timer = current_timer;
+			}
+			/*For optimisation, count the found timers*/
+			hold_count++;
+		}
+	}
+
+	if(!first_timer)
+		return 0;
+
+	/*If hold-labelled timer found, set it active and start the HAL driver*/
+	hold_count--;
+	first_timer->timer_state = NS_TIMER_ACTIVE;
+	/*Compensate time spent in timer function*/
+	if(first_timer->remaining_slots > COMPENSATION)
+		first_timer->remaining_slots -= COMPENSATION;
+	/*Start HAL timer*/
+	ns_timer_start_pl_timer(first_timer->remaining_slots);
+
+	/*Update other hold-labelled timers*/
+	ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
+	{
+		if(hold_count == 0) // early termination optimisation
+			break;
+		if(current_timer->timer_state == NS_TIMER_HOLD)
+		{
+			if(current_timer->remaining_slots == first_timer->remaining_slots)
+			{
+				current_timer->timer_state = NS_TIMER_ACTIVE;
 			}
 			else
 			{
-				timer_tmp = current_timer;
+				current_timer->remaining_slots -= first_timer->remaining_slots;
+				/*Compensate time spent in timer function*/
+				if(current_timer->remaining_slots > COMPENSATION)
+					current_timer->remaining_slots -= COMPENSATION;
 			}
-			/*For optimisation, count the found timers*/
-			i++;
-		}
-		current_timer = current_timer->next_timer;
-	}
-	/*If hold-labelled timer found, set it active and start the HAL driver*/
-	if(timer_tmp)
-	{
-		i--;
-		timer_tmp->timer_state = NS_TIMER_ACTIVE;
-		/*Compensate time spent in timer function*/
-		if(timer_tmp->remaining_slots > COMPENSATION)
-			timer_tmp->remaining_slots -= COMPENSATION;
-		/*Start HAL timer*/
-		ns_timer_start_pl_timer(timer_tmp->remaining_slots);
-
-		/*Update hold-labelled timers*/
-		current_timer = ns_timer_list;
-		while(current_timer && i)
-		{
-			if(current_timer->timer_state == NS_TIMER_HOLD)
-			{
-				if(current_timer->remaining_slots == timer_tmp->remaining_slots)
-				{
-					current_timer->timer_state = NS_TIMER_ACTIVE;
-				}
-				else
-				{
-					current_timer->remaining_slots -= timer_tmp->remaining_slots;
-					/*Compensate time spent in timer function*/
-					if(current_timer->remaining_slots > COMPENSATION)
-						current_timer->remaining_slots -= COMPENSATION;
-				}
-				i--;
-			}
-			current_timer = current_timer->next_timer;
+			hold_count--;
 		}
 	}
 
@@ -241,28 +192,36 @@ int8_t ns_timer_get_next_running_to(void)
 }
 
 
-ns_timer_struct *ns_timer_get_pointer_to_timer_struct(int8_t timer_id)
+static ns_timer_struct *ns_timer_get_pointer_to_timer_struct(int8_t timer_id)
 {
-	ns_timer_struct *current_timer;
 	/*Find timer with the given ID*/
-	current_timer = ns_timer_list;
-	while(current_timer)
+	ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
 	{
 		if(current_timer->ns_timer_id == timer_id)
-			break;
-		current_timer = current_timer->next_timer;
+			return current_timer;
 	}
-	return current_timer;
+	return NULL;
 }
 
 int8_t eventOS_callback_timer_start(int8_t ns_timer_id, uint16_t slots)
 {
 	int8_t ret_val = 0;
 	uint16_t pl_timer_remaining_slots;
-	ns_timer_struct *current_timer = 0;
+	ns_timer_struct *timer;
 	platform_enter_critical();
 
-	/*If none of timers is active*/
+	/*Find timer to be activated*/
+	timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
+	if(!timer)
+	{
+		ret_val = -1;
+		goto exit;
+	}
+
+	// XXX this assumes the timer currently isn't running?
+	// Is event.c relying on this restarting HAL timer after ns_timer_sleep()?
+
+	/*If any timers are active*/
 	if(ns_timer_state & NS_TIMER_RUNNING)
 	{
 		/*Get remaining slots of the currently activated timeout*/
@@ -274,8 +233,7 @@ int8_t eventOS_callback_timer_start(int8_t ns_timer_id, uint16_t slots)
 			/*Start HAL timer*/
 			ns_timer_start_pl_timer(slots - 0);
 
-			current_timer = ns_timer_list;
-			while(current_timer)
+			ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
 			{
 				/*Switch active timers to hold*/
 				if(current_timer->timer_state == NS_TIMER_ACTIVE)
@@ -291,89 +249,53 @@ int8_t eventOS_callback_timer_start(int8_t ns_timer_id, uint16_t slots)
 					if(current_timer->remaining_slots > (COMPENSATION - COMPENSATION_TUNE))
 						current_timer->remaining_slots -= (COMPENSATION - COMPENSATION_TUNE);
 				}
-				current_timer = current_timer->next_timer;
 			}
-			/*Find timer to be activated*/
-			current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
-			if(current_timer)
-			{
-				/*Mark active and start the timer*/
-				current_timer->timer_state = NS_TIMER_ACTIVE;
-				current_timer->slots = slots;
-				current_timer->remaining_slots = slots;
-			}
-			else
-			{
-				ret_val = -3;
-			}
+			/*Mark active and start the timer*/
+			timer->timer_state = NS_TIMER_ACTIVE;
+			timer->slots = slots;
+			timer->remaining_slots = slots;
 		}
 
 		/*New timeout is longer than currently enabled timeout*/
 		else if(pl_timer_remaining_slots < slots)
 		{
-			current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
-			if(current_timer)
-			{
-				/*Mark hold and update remaining slots*/
-				current_timer->timer_state = NS_TIMER_HOLD;
-				current_timer->slots = slots;
-				current_timer->remaining_slots = (slots - pl_timer_remaining_slots);
-			}
-			else
-			{
-				ret_val = -4;
-			}
+			/*Mark hold and update remaining slots*/
+			timer->timer_state = NS_TIMER_HOLD;
+			timer->slots = slots;
+			timer->remaining_slots = (slots - pl_timer_remaining_slots);
 		}
 		/*New timeout is equal to currently enabled timeout*/
 		else
 		{
-			current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
-			if(current_timer)
-			{
-				/*Mark it active and it will be handled in next interrupt*/
-				current_timer->timer_state = NS_TIMER_ACTIVE;
-				current_timer->slots = slots;
-				current_timer->remaining_slots = slots;
-			}
-			else
-			{
-				ret_val = -2;
-			}
+			/*Mark it active and it will be handled in next interrupt*/
+			timer->timer_state = NS_TIMER_ACTIVE;
+			timer->slots = slots;
+			timer->remaining_slots = slots;
 		}
 	}
 	else
 	{
 		/*No timers running*/
-		current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
-		if(current_timer)
-		{
-			current_timer->timer_state = NS_TIMER_HOLD;
-			current_timer->slots = slots;
-			current_timer->remaining_slots = slots;
-			/*Start next timeout*/
-			ns_timer_get_next_running_to();
-		}
-		else
-		{
-			ret_val = -1;
-		}
+		timer->timer_state = NS_TIMER_HOLD;
+		timer->slots = slots;
+		timer->remaining_slots = slots;
+		/*Start next timeout*/
+		ns_timer_get_next_running_to();
 	}
+exit:
 	platform_exit_critical();
 	return ret_val;
 }
 
-void ns_timer_interrupt_handler(void)
+static void ns_timer_interrupt_handler(void)
 {
-	ns_timer_struct *current_timer;
-
 	uint8_t i = 0;
 
 	platform_enter_critical();
 	/*Clear timer running state*/
 	ns_timer_state &= ~NS_TIMER_RUNNING;
 	/*Mark active timers as NS_TIMER_RUN_INTERRUPT, interrupt functions are called at the end of this function*/
-	current_timer = ns_timer_list;
-	while(current_timer)
+	ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
 	{
 		if(current_timer->timer_state == NS_TIMER_ACTIVE)
 		{
@@ -381,23 +303,22 @@ void ns_timer_interrupt_handler(void)
 			/*For optimisation, count the found timers*/
 			i++;
 		}
-		current_timer = current_timer->next_timer;
 	}
 
 	/*Start next timeout*/
 	ns_timer_get_next_running_to();
 
 	/*Call interrupt functions*/
-	current_timer = ns_timer_list;
-	while(current_timer && i)
+	ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
 	{
+		if (i == 0)
+			break;
 		if(current_timer->timer_state == NS_TIMER_RUN_INTERRUPT)
 		{
 			current_timer->timer_state = NS_TIMER_STOP;
 			current_timer->interrupt_handler(current_timer->ns_timer_id, current_timer->slots);
 			i--;
 		}
-		current_timer = current_timer->next_timer;
 	}
 
 	platform_exit_critical();
@@ -406,83 +327,73 @@ void ns_timer_interrupt_handler(void)
 int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
 {
 	uint16_t pl_timer_remaining_slots;
-	uint8_t active_timer_found = 0;
+	bool active_timer_found = false;
 	ns_timer_struct *current_timer;
-	ns_timer_struct *timer_tmp = NULL;
+	ns_timer_struct *first_timer = NULL;
 	int8_t retval = -1;
-
 
 	platform_enter_critical();
 	/*Find timer with given timer ID*/
 	current_timer = ns_timer_get_pointer_to_timer_struct(ns_timer_id);
-	if(current_timer)
-	{
-		/*If not already stopped*/
-		if(current_timer->timer_state != NS_TIMER_STOP)
-		{
-			current_timer->timer_state = NS_TIMER_STOP;
-			current_timer->remaining_slots = 0;
-			/*Check if some timer is already active*/
-			current_timer = ns_timer_list;
-			while(current_timer)
-			{
-				if(current_timer->timer_state == NS_TIMER_ACTIVE)
-				{
-					active_timer_found = 1;
-					break;
-				}
-				current_timer = current_timer->next_timer;
-			}
-			/*If no active timers found, start one*/
-			if(!active_timer_found)
-			{
-				current_timer = ns_timer_list;
-				pl_timer_remaining_slots = platform_timer_get_remaining_slots();
-				/*Find hold-labelled timer with the less remaining slots*/
-				while(current_timer)
-				{
-					if(current_timer->timer_state == NS_TIMER_HOLD)
-					{
-						current_timer->remaining_slots += pl_timer_remaining_slots;
+	if(!current_timer)
+		goto exit;
 
-						if(timer_tmp)
-						{
-							if(current_timer->remaining_slots < timer_tmp->remaining_slots)
-							{
-								timer_tmp = current_timer;
-							}
-						}
-						else
-						{
-							timer_tmp = current_timer;
-						}
-					}
-					current_timer = current_timer->next_timer;
-				}
-				/*If hold-labelled timer found, set it active and start the HAL driver*/
-				if(timer_tmp)
+	retval = 0;
+
+	/*Check if already stopped*/
+	if (current_timer->timer_state == NS_TIMER_STOP)
+		goto exit;
+
+	current_timer->timer_state = NS_TIMER_STOP;
+	current_timer->remaining_slots = 0;
+
+	/*Check if some timer is already active*/
+	ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
+	{
+		if(current_timer->timer_state == NS_TIMER_ACTIVE)
+		{
+			active_timer_found = true;
+			break;
+		}
+	}
+	/*If no active timers found, start one*/
+	if(!active_timer_found)
+	{
+		pl_timer_remaining_slots = platform_timer_get_remaining_slots();
+		/*Find hold-labelled timer with the least remaining slots*/
+		ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
+		{
+			if(current_timer->timer_state == NS_TIMER_HOLD)
+			{
+				current_timer->remaining_slots += pl_timer_remaining_slots;
+
+				if(!first_timer || current_timer->remaining_slots < first_timer->remaining_slots)
 				{
-					timer_tmp->timer_state = NS_TIMER_ACTIVE;
-					/*Start HAL timer*/
-					ns_timer_start_pl_timer(timer_tmp->remaining_slots);
-					/*If some of the hold-labelled timers has the same remaining slots as the timer_tmp, mark it active*/
-					current_timer = ns_timer_list;
-					while(current_timer)
+					first_timer = current_timer;
+				}
+			}
+		}
+		/*If hold-labelled timer found, set it active and start the HAL driver*/
+		if(first_timer)
+		{
+			first_timer->timer_state = NS_TIMER_ACTIVE;
+			/*Start HAL timer*/
+			ns_timer_start_pl_timer(first_timer->remaining_slots);
+			/*If some of the other hold-labelled timers have the same remaining slots as the timer_tmp, mark them active*/
+			ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list)
+			{
+				if(current_timer->timer_state == NS_TIMER_HOLD)
+				{
+					if(current_timer->remaining_slots == first_timer->remaining_slots)
 					{
-						if(current_timer->timer_state == NS_TIMER_HOLD)
-						{
-							if(current_timer->remaining_slots == timer_tmp->remaining_slots)
-							{
-								current_timer->timer_state = NS_TIMER_ACTIVE;
-							}
-						}
-						current_timer = current_timer->next_timer;
+						current_timer->timer_state = NS_TIMER_ACTIVE;
 					}
 				}
 			}
 		}
-		retval = 0;
 	}
+
+exit:
 	platform_exit_critical();
 
 	return retval;
