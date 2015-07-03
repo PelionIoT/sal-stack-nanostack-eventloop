@@ -3,7 +3,6 @@
  */
 #include "ns_types.h"
 #include "sys_error.h"
-#include "sys_event.h"
 #include "timer_sys.h"
 #include "platform/arm_hal_interrupt.h"
 #include "platform/ns_debug.h"

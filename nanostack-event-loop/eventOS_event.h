@@ -27,7 +27,7 @@ typedef struct arm_event_s
 {
 	int8_t receiver; /**< Event handler Tasklet ID */
 	int8_t sender; /**< Event sender Tasklet ID */
-	uint8_t event_type; /**< This will be typecast arm_library_event_type_e */
+	uint8_t event_type; /**< This will be typecast arm_library_event_type_e, arm_internal_event_type_e or application specific define */
 	uint8_t event_id; /**< Timer ID, NWK interface ID or application specific ID */
 	void *data_ptr; /**< Application could share data pointer tasklet to tasklet */
 	arm_library_event_priority_e priority;
