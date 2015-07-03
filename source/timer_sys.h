@@ -4,15 +4,6 @@
 #ifndef _PL_NANO_TIMER_SYS_H_
 #define _PL_NANO_TIMER_SYS_H_
 
-
-
-typedef struct
-{
-	void (*fptr)(void);
-	uint32_t ticks;
-} core_timer_32_bit_t;
-
-
 /**
  * Initialize system timer
  * */
