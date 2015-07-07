@@ -3,7 +3,7 @@
  */
 #ifndef EVENTOS_CALLBACK_TIMER_H_
 #define EVENTOS_CALLBACK_TIMER_H_
- #ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 #include "ns_types.h"

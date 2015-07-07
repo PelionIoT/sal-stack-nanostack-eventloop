@@ -3,7 +3,7 @@
  */
 #ifndef EVENTOS_EVENT_TIMER_H_
 #define EVENTOS_EVENT_TIMER_H_
- #ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 #include "ns_types.h"
@@ -51,7 +51,7 @@ typedef struct timeout_entry_t timeout_t;
  * \param arg arquement to pass to callback
  * \return pointer to timeout structure or NULL on errors
  */
-timeout_t *eventOS_timeout_ms(void (*callback)(void*), uint32_t ms, void *arg);
+timeout_t *eventOS_timeout_ms(void (*callback)(void *), uint32_t ms, void *arg);
 
 /** Cancell timeout request.
  * Not thread safe. Should not be called from interrupt context.

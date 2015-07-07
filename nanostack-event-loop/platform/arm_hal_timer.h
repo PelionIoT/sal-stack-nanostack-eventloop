@@ -3,7 +3,7 @@
  */
 #ifndef ARM_HAL_TIMER_H_
 #define ARM_HAL_TIMER_H_
- #ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 /**

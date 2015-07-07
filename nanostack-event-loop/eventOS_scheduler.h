@@ -4,7 +4,7 @@
 #ifndef EVENTOS_SCHEDULER_H_
 #define EVENTOS_SCHEDULER_H_
 
- #ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 #include "ns_types.h"
