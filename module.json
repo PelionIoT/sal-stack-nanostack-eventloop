@@ -1,22 +1,22 @@
 {
-  "name": "nanostack-event-loop",
-  "version": "0.0.4",
-  "description": "Nanostack Event Loop",
+  "name": "mbed-6lowpan-eventloop",
+  "version": "0.0.9",
+  "description": "Event loop for 6LoWPAN stack",
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
   "repository": {
-    "url": "git@github.com:ARMmbed/nanomesh-eventloop.git",
+    "url": "git@github.com:ARMmbed/mbed-6lowpan-eventloop.git",
     "type": "git"
   },
-  "homepage": "https://github.com/ARMmbed/nanomesh-eventloop",
+  "homepage": "https://github.com/ARMmbed/mbed-6lowpan-eventloop",
+  "private": true,
   "license": "Proprietary, all rights reserved.",
   "extraIncludes": [
     "nanostack-event-loop"
   ],
   "dependencies": {
-    "libservice": "ARMmbed/nanomesh-libService#~0.0.3",
-    "nanostack": "ARMmbed/nanomesh-nanostack#~0.0.3",
-    "nanostack-eventos-mbed": "ARMmbed/nanostack-eventos-mbed"
+    "mbed-client-libservice": "~2.0.9",
+    "mbed-6lowpan-eventloop-adaptor": "~0.0.6"
   },
   "targetDependencies": {}
 }
