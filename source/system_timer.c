@@ -5,7 +5,6 @@
 #include "ns_list.h"
 #include "timer_sys.h"
 #include "platform/arm_hal_interrupt.h"
-#include "platform/ns_debug.h"
 #include "ns_timer.h"
 #include "nsdynmemLIB.h"
 #include "eventOS_event.h"
@@ -115,7 +114,6 @@ static sys_timer_struct_s *timer_struct_get(void)
     if (timer) {
         ns_list_remove(&system_timer_free, timer);
     } else {
-        debug("Timer DYN Allocate\n");
         timer = sys_timer_dynamically_allocate();
     }
     platform_exit_critical();

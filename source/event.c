@@ -15,11 +15,6 @@
 #include "eventOS_event.h"
 #include "eventOS_scheduler.h"
 #include "timer_sys.h"
-#ifdef NS_DEBUG
-#include "platform/ns_debug.h"
-#else
-#include "platform/ns_debug.h"
-#endif
 #include "nsdynmemLIB.h"
 #include "ns_timer.h"
 
@@ -155,7 +150,6 @@ arm_core_event_s *event_core_get(void)
     if (event) {
         ns_list_remove(&free_event_entry, event);
     } else {
-        debug("DYN Allocate\n");
         event = event_dynamically_allocate();
     }
     if (event) {
@@ -295,8 +289,6 @@ void event_dispatch_cycle(void)
             tasklet->func_ptr(&event);
             /* Set Current Tasklet to Idle state */
             curr_tasklet = 0;
-        } else {
-            debug("NO Task1\n");
         }
     } else {
         eventOS_scheduler_idle();
