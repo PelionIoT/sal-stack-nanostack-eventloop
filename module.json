@@ -1,6 +1,6 @@
 {
   "name": "mbed-6lowpan-eventloop",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Event loop for 6LoWPAN stack",
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
