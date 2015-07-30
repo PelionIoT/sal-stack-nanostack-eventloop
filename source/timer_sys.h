@@ -4,6 +4,10 @@
 #ifndef _PL_NANO_TIMER_SYS_H_
 #define _PL_NANO_TIMER_SYS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialize system timer
  * */
@@ -22,5 +26,9 @@ void timer_sys_disable(void);
  *
  * */
 void system_timer_tick_update(uint32_t ticks);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*_PL_NANO_TIMER_SYS_H_*/

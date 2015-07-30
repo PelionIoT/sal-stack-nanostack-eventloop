@@ -20,6 +20,11 @@
 
 #include "platform/arm_hal_interrupt.h"
 
+#include "minar/minar.h"
+#include "mbed/FunctionPointer.h"
+
+using minar::Scheduler;
+using mbed::FunctionPointer0;
 
 typedef struct arm_core_tasklet_list_s {
     int8_t id; /**< Event handler Tasklet ID */
@@ -38,7 +43,7 @@ static NS_LIST_DEFINE(free_event_entry, arm_core_event_s, link);
 
 /** Curr_tasklet tell to core and platform which task_let is active, Core Update this automatic when switch Tasklet. */
 int8_t curr_tasklet = 0;
-
+static volatile bool run_scheduled = false;
 
 static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void);
 static arm_core_event_s *event_dynamically_allocate(void);
@@ -81,30 +86,30 @@ int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uin
     }
 
     //Allocate new
-    arm_core_tasklet_list_s *new = tasklet_dynamically_allocate();
-    if (!new) {
+    arm_core_tasklet_list_s *new_task = tasklet_dynamically_allocate();
+    if (!new_task) {
         return -2;
     }
 
     event_tmp = event_core_get();
     if (!event_tmp) {
-        ns_dyn_mem_free(new);
+        ns_dyn_mem_free(new_task);
         return -2;
     }
 
     //Fill in tasklet; add to list
-    new->id = tasklet_get_free_id();
-    new->func_ptr = handler_func_ptr;
-    ns_list_add_to_end(&arm_core_tasklet_list, new);
+    new_task->id = tasklet_get_free_id();
+    new_task->func_ptr = handler_func_ptr;
+    ns_list_add_to_end(&arm_core_tasklet_list, new_task);
 
     //Queue "init" event for the new task
-    event_tmp->data.receiver = new->id;
+    event_tmp->data.receiver = new_task->id;
     event_tmp->data.sender = 0;
     event_tmp->data.event_type = init_event_type;
     event_tmp->data.event_data = 0;
     event_core_write(event_tmp);
 
-    return new->id;
+    return new_task->id;
 }
 
 /**
@@ -133,12 +138,12 @@ int8_t eventOS_event_send(arm_event_s *event)
 
 static arm_core_event_s *event_dynamically_allocate(void)
 {
-    return ns_dyn_mem_alloc(sizeof(arm_core_event_s));
+    return (arm_core_event_s*)ns_dyn_mem_alloc(sizeof(arm_core_event_s));
 }
 
 static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void)
 {
-    return ns_dyn_mem_alloc(sizeof(arm_core_tasklet_list_s));
+    return (arm_core_tasklet_list_s*)ns_dyn_mem_alloc(sizeof(arm_core_tasklet_list_s));
 }
 
 
@@ -194,6 +199,11 @@ void event_core_write(arm_core_event_s *event)
     }
     if (!added) {
         ns_list_add_to_end(&event_queue_active, event);
+    }
+
+    if (!run_scheduled) {
+        Scheduler::postCallback(FunctionPointer0<void>(eventOS_scheduler_run).bind()).tolerance(0);
+        run_scheduled = true;
     }
 
     /* Wake From Idle */
@@ -270,7 +280,7 @@ int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
  * Function Read and handle Cores Event and switch/enable tasklet which are event receiver. WhenEvent queue is empty it goes to sleep
  *
  */
-void event_dispatch_cycle(void)
+bool event_dispatch_cycle(void)
 {
     arm_core_tasklet_list_s *tasklet;
     arm_core_event_s *cur_event;
@@ -290,8 +300,9 @@ void event_dispatch_cycle(void)
             /* Set Current Tasklet to Idle state */
             curr_tasklet = 0;
         }
+        return true;
     } else {
-        eventOS_scheduler_idle();
+        return false;
     }
 }
 
@@ -304,7 +315,6 @@ void event_dispatch_cycle(void)
  */
 noreturn void eventOS_scheduler_run(void)
 {
-    while (1) {
-        event_dispatch_cycle();
-    }
+    while (event_dispatch_cycle());
+    run_scheduled = false;
 }
