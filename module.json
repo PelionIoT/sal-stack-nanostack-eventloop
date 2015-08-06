@@ -16,7 +16,8 @@
   ],
   "dependencies": {
     "mbed-client-libservice": "~3.0.0",
-    "mbed-6lowpan-eventloop-adaptor": "~0.0.6"
+    "mbed-6lowpan-eventloop-adaptor": "~0.0.6",
+    "minar": "~0.5.0"
   },
   "targetDependencies": {}
 }

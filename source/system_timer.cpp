@@ -20,7 +20,13 @@
 #include "ns_timer.h"
 #include "nsdynmemLIB.h"
 #include "eventOS_event.h"
-#include "eventOS_callback_timer.h"
+#include "eventOS_event_timer.h"
+#include "minar/minar.h"
+#include "mbed/mbed.h"
+
+using minar::Scheduler;
+using minar::milliseconds;
+using minar::callback_handle_t;
 
 #ifndef ST_MAX
 #define ST_MAX 6
@@ -36,16 +42,14 @@ typedef struct sys_timer_struct_s {
 } sys_timer_struct_s;
 
 #define TIMER_SYS_TICK_PERIOD       10 // milliseconds
-#define TIMER_SYS_TICK_SLOTS        (TIMER_SYS_TICK_PERIOD * 20) // 50us slots
 
 static uint32_t run_time_tick_ticks = 0;
 static NS_LIST_DEFINE(system_timer_free, sys_timer_struct_s, link);
 static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, link);
-static int8_t sys_timer_id = -1;
+static callback_handle_t sys_timer_handle;
 
 
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
-static void timer_sys_interrupt(int8_t timer_id, uint16_t slots);
 
 
 
@@ -55,8 +59,6 @@ static void timer_sys_interrupt(int8_t timer_id, uint16_t slots);
 void timer_sys_init(void)
 {
     run_time_tick_ticks = 0;
-
-    sys_timer_id = eventOS_callback_timer_register(timer_sys_interrupt);
 
     // Clear old timers
     ns_list_foreach_safe(sys_timer_struct_s, temp, &system_timer_list) {
@@ -76,9 +78,8 @@ void timer_sys_init(void)
         }
     }
 
-    if (sys_timer_id >= 0) {
-        eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
-    }
+    Event e = FunctionPointer1<void, uint32_t>(system_timer_tick_update).bind(1);
+    sys_timer_handle = Scheduler::postCallback(e).period(milliseconds(TIMER_SYS_TICK_PERIOD)).getHandle();
 }
 
 
@@ -86,7 +87,10 @@ void timer_sys_init(void)
 /*-------------------SYSTEM TIMER FUNCTIONS--------------------------*/
 void timer_sys_disable(void)
 {
-    eventOS_callback_timer_stop(sys_timer_id);
+    if (sys_timer_handle != NULL) {
+        Scheduler::cancelCallback(sys_timer_handle);
+        sys_timer_handle = NULL;
+    }
 }
 
 /*
@@ -94,28 +98,21 @@ void timer_sys_disable(void)
  */
 int8_t timer_sys_wakeup(void)
 {
-    int8_t ret_val = -1;
-    if (sys_timer_id >= 0) {
-        ret_val = eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
+    // postCallback should never fail in MINAR
+    // TODO: check if that's true
+    if (NULL == sys_timer_handle) {
+        Event e = FunctionPointer1<void, uint32_t>(system_timer_tick_update).bind(1);
+        sys_timer_handle = Scheduler::postCallback(e).period(milliseconds(TIMER_SYS_TICK_PERIOD)).getHandle();
     }
-    return ret_val;
+    return 0;
 }
-
-
-static void timer_sys_interrupt(int8_t timer_id, uint16_t slots)
-{
-    eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
-
-    system_timer_tick_update(1);
-}
-
 
 
 /* * * * * * * * * */
 
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void)
 {
-    return ns_dyn_mem_alloc(sizeof(sys_timer_struct_s));
+    return (sys_timer_struct_s*)ns_dyn_mem_alloc(sizeof(sys_timer_struct_s));
 }
 
 static sys_timer_struct_s *timer_struct_get(void)
