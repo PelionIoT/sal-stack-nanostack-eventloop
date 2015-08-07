@@ -1,5 +1,5 @@
 {
-  "name": "mbed-6lowpan-eventloop",
+  "name": "sal-stack-nanostack-eventloop",
   "version": "0.0.12",
   "description": "Event loop for 6LoWPAN stack",
   "keywords": [],
