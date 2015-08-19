@@ -2,7 +2,7 @@
 # Example (GCC toolchains)
 # make PLATFORM=arm-linux-gnueabi-
 # OR
-# make CC=ArmCC AR=ArmAR
+# make CC=armcc AR=ArmAR
 # OR
 # make CC=iccarm
 
