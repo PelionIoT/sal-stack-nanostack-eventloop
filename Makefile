@@ -8,10 +8,10 @@
 
 LIB = libeventOS.a
 SRCS += \
-		source/event.c \
-		source/ns_timer.c \
-		source/system_timer.c\
-		source/timeout.c
+		bare-metal/event.c \
+		bare-metal/ns_timer.c \
+		bare-metal/system_timer.c\
+		bare-metal/timeout.c
 
 include ../libService/toolchain_rules.mk
 
