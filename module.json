@@ -9,7 +9,6 @@
     "type": "git"
   },
   "homepage": "https://github.com/ARMmbed/mbed-6lowpan-eventloop",
-  "private": true,
   "license": "Apache-2.0",
   "extraIncludes": [
     "nanostack-event-loop"
