@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited. All rights reserved.
+ * Copyright (c) 2014-2015 ARM Limited. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  * Licensed under the Apache License, Version 2.0 (the License); you may
  * not use this file except in compliance with the License.
@@ -38,13 +38,18 @@ static void timeout_tasklet(arm_event_s *event)
         return;
     }
 
+    timeout_t *found = NULL;
     ns_list_foreach_safe(timeout_t, cur, &timeout_list) {
         if (cur->event_id == event->event_id) {
-            cur->callback(cur->arg);
+            found = cur;
             ns_list_remove(&timeout_list, cur);
-            ns_dyn_mem_free(cur);
             break;
         }
+    }
+
+    if (found) {
+        found->callback(found->arg);
+        ns_dyn_mem_free(found);
     }
 }
 
