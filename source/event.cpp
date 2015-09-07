@@ -13,14 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- *
- * \file event.c
- * \brief Core event handler.
- *
- *  Event dispatching functions.
- *
- */
 #include <string.h>
 #include "ns_types.h"
 #include "ns_list.h"
@@ -214,7 +206,7 @@ void event_core_write(arm_core_event_s *event)
     }
 
     if (!run_scheduled) {
-        Scheduler::postCallback(FunctionPointer0<void>(eventOS_scheduler_run).bind()).tolerance(0);
+        Scheduler::postCallback(FunctionPointer0<void>(eventOS_scheduler_run_until_idle).bind()).tolerance(0);
         run_scheduled = true;
     }
 
@@ -318,6 +310,12 @@ bool event_dispatch_cycle(void)
     }
 }
 
+void eventOS_scheduler_run_until_idle(void)
+{
+    while (event_dispatch_cycle());
+    run_scheduled = false;
+}
+
 /**
  *
  * \brief Infinite Event Read Loop.
@@ -327,6 +325,7 @@ bool event_dispatch_cycle(void)
  */
 noreturn void eventOS_scheduler_run(void)
 {
-    while (event_dispatch_cycle());
-    run_scheduled = false;
+    while (1) {
+        event_dispatch_cycle();
+    }
 }
