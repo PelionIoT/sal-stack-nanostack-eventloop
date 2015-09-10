@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited. All rights reserved.
+ * Copyright (c) 2014-2015 ARM Limited. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  * Licensed under the Apache License, Version 2.0 (the License); you may
  * not use this file except in compliance with the License.
@@ -38,18 +38,25 @@ static void timeout_tasklet(arm_event_s *event)
         return;
     }
 
+    timeout_t *found = NULL;
     ns_list_foreach_safe(timeout_t, cur, &timeout_list) {
         if (cur->event_id == event->event_id) {
-            cur->callback(cur->arg);
+            found = cur;
             ns_list_remove(&timeout_list, cur);
-            ns_dyn_mem_free(cur);
             break;
         }
+    }
+
+    if (found) {
+        found->callback(found->arg);
+        ns_dyn_mem_free(found);
     }
 }
 
 timeout_t *eventOS_timeout_ms(void (*callback)(void *), uint32_t ms, void *arg)
 {
+    uint16_t count;
+    uint8_t index;
     timeout_t *e = ns_dyn_mem_alloc(sizeof(timeout_t));
     if (!e) {
         return NULL;
@@ -67,13 +74,13 @@ timeout_t *eventOS_timeout_ms(void (*callback)(void *), uint32_t ms, void *arg)
     }
 
     // Check that we still have indexes left. We have only 8bit timer id.
-    uint16_t count = ns_list_count(&timeout_list);
+    count = ns_list_count(&timeout_list);
     if (count >= UINT8_MAX) { // Too big list, timer_id is uint8_t
         goto FAIL;
     }
 
     // Find next free index
-    uint8_t index = 0;
+    index = 0;
 AGAIN:
     ns_list_foreach(timeout_t, cur, &timeout_list) {
         if (cur->event_id == index) { // This index was used
