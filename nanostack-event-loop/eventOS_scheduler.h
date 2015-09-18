@@ -26,6 +26,11 @@ extern "C" {
  */
 extern void eventOS_scheduler_init(void);
 /**
+ * \brief Process events until no more events to process.
+ *
+ */
+extern void eventOS_scheduler_run_until_idle(void);
+/**
  * \brief Start Event scheduler.
  *
  */
