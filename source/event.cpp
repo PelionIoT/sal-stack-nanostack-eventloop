@@ -25,10 +25,10 @@
 #include "platform/arm_hal_interrupt.h"
 
 #include "minar/minar.h"
-#include "mbed/FunctionPointer.h"
+#include "mbed-util/FunctionPointer.h"
 
 using minar::Scheduler;
-using mbed::FunctionPointer0;
+using mbed::util::FunctionPointer0;
 
 typedef struct arm_core_tasklet_list_s {
     int8_t id; /**< Event handler Tasklet ID */
