@@ -28,7 +28,7 @@
 #include "mbed-util/FunctionPointer.h"
 
 using minar::Scheduler;
-using mbed::util::FunctionPointer0;
+using namespace mbed::util;
 
 typedef struct arm_core_tasklet_list_s {
     int8_t id; /**< Event handler Tasklet ID */

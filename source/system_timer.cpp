@@ -29,8 +29,7 @@
 using minar::Scheduler;
 using minar::milliseconds;
 using minar::callback_handle_t;
-using mbed::util::FunctionPointer1;
-using mbed::util::Event;
+using namespace mbed::util;
 
 #ifndef ST_MAX
 #define ST_MAX 6
