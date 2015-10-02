@@ -13,14 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- *
- * \file event.c
- * \brief Core event handler.
- *
- *  Event dispatching functions.
- *
- */
 #include <string.h>
 #include "ns_types.h"
 #include "ns_list.h"
@@ -33,10 +25,10 @@
 #include "platform/arm_hal_interrupt.h"
 
 #include "minar/minar.h"
-#include "mbed/FunctionPointer.h"
+#include "mbed-util/FunctionPointer.h"
 
 using minar::Scheduler;
-using mbed::FunctionPointer0;
+using namespace mbed::util;
 
 typedef struct arm_core_tasklet_list_s {
     int8_t id; /**< Event handler Tasklet ID */
@@ -214,7 +206,7 @@ void event_core_write(arm_core_event_s *event)
     }
 
     if (!run_scheduled) {
-        Scheduler::postCallback(FunctionPointer0<void>(eventOS_scheduler_run).bind()).tolerance(0);
+        Scheduler::postCallback(FunctionPointer0<void>(eventOS_scheduler_run_until_idle).bind()).tolerance(0);
         run_scheduled = true;
     }
 
@@ -292,7 +284,7 @@ int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
  * Function Read and handle Cores Event and switch/enable tasklet which are event receiver. WhenEvent queue is empty it goes to sleep
  *
  */
-bool event_dispatch_cycle(void)
+bool eventOS_scheduler_dispatch_event(void)
 {
     arm_core_tasklet_list_s *tasklet;
     arm_core_event_s *cur_event;
@@ -318,6 +310,12 @@ bool event_dispatch_cycle(void)
     }
 }
 
+void eventOS_scheduler_run_until_idle(void)
+{
+    while (eventOS_scheduler_dispatch_event());
+    run_scheduled = false;
+}
+
 /**
  *
  * \brief Infinite Event Read Loop.
@@ -327,6 +325,9 @@ bool event_dispatch_cycle(void)
  */
 noreturn void eventOS_scheduler_run(void)
 {
-    while (event_dispatch_cycle());
-    run_scheduled = false;
+    while (1) {
+        if (!eventOS_scheduler_dispatch_event()) {
+            eventOS_scheduler_idle();
+        }
+    }
 }

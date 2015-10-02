@@ -274,7 +274,7 @@ int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
  * Function Read and handle Cores Event and switch/enable tasklet which are event receiver. WhenEvent queue is empty it goes to sleep
  *
  */
-void event_dispatch_cycle(void)
+bool eventOS_scheduler_dispatch_event(void)
 {
     arm_core_tasklet_list_s *tasklet;
     arm_core_event_s *cur_event;
@@ -294,9 +294,15 @@ void event_dispatch_cycle(void)
             /* Set Current Tasklet to Idle state */
             curr_tasklet = 0;
         }
+        return true;
     } else {
-        eventOS_scheduler_idle();
+        return false;
     }
+}
+
+void eventOS_scheduler_run_until_idle(void)
+{
+    while (eventOS_scheduler_dispatch_event());
 }
 
 /**
@@ -309,6 +315,8 @@ void event_dispatch_cycle(void)
 noreturn void eventOS_scheduler_run(void)
 {
     while (1) {
-        event_dispatch_cycle();
+        if (!eventOS_scheduler_dispatch_event()) {
+            eventOS_scheduler_idle();
+        }
     }
 }

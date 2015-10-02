@@ -23,10 +23,13 @@
 #include "eventOS_event_timer.h"
 #include "minar/minar.h"
 #include "mbed/mbed.h"
+#include "mbed-util/FunctionPointer.h"
+#include "mbed-util/Event.h"
 
 using minar::Scheduler;
 using minar::milliseconds;
 using minar::callback_handle_t;
+using namespace mbed::util;
 
 #ifndef ST_MAX
 #define ST_MAX 6

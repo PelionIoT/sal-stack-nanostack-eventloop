@@ -1,6 +1,6 @@
 {
   "name": "sal-stack-nanostack-eventloop",
-  "version": "0.0.15",
+  "version": "0.0.19",
   "description": "Event loop for 6LoWPAN stack",
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
@@ -9,7 +9,6 @@
     "type": "git"
   },
   "homepage": "https://github.com/ARMmbed/mbed-6lowpan-eventloop",
-  "private": true,
   "license": "Apache-2.0",
   "extraIncludes": [
     "nanostack-event-loop"
@@ -17,7 +16,7 @@
   "dependencies": {
     "nanostack-libservice": "~3.0.0",
     "mbed-6lowpan-eventloop-adaptor": "~0.0.6",
-    "minar": "~0.6.0"
+    "minar": "~0.7.0"
   },
   "targetDependencies": {}
 }

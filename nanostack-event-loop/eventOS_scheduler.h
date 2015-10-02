@@ -20,14 +20,31 @@
 extern "C" {
 #endif
 #include "ns_types.h"
+
+
 /**
  * \brief Initialise event scheduler.
  *
  */
 extern void eventOS_scheduler_init(void);
+
+/**
+ * Process one event from event queue.
+ * Do not call this directly from application. Requires to be public so that simulator can call this.
+ * Use eventOS_scheduler_run() or eventOS_scheduler_run_until_idle().
+ * \return true If there was event processed, false if the event queue was empty.
+ */
+bool eventOS_scheduler_dispatch_event(void);
+
+/**
+ * \brief Process events until no more events to process.
+ *
+ */
+extern void eventOS_scheduler_run_until_idle(void);
 /**
  * \brief Start Event scheduler.
- *
+ * Loops forever processing events from the queue.
+ * Calls eventOS_scheduler_idle() whenever event queue is empty.
  */
 extern noreturn void eventOS_scheduler_run(void);
 /**
@@ -69,8 +86,9 @@ extern int8_t eventOS_scheduler_get_active_tasklet(void);
 extern  void eventOS_scheduler_set_active_tasklet(int8_t tasklet);
 
 /**
- * \brief Event schdeuler loop idle Callback which need to be port Every Application which use nanostack event scheduler
+ * \brief Event scheduler loop idle Callback.
  *
+ * Needs to be ported for the platform if you are using eventOS_scheduler_run().
  *
  */
 extern void eventOS_scheduler_idle(void);
