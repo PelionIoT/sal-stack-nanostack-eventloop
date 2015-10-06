@@ -25,7 +25,7 @@
 #include "platform/arm_hal_interrupt.h"
 
 #include "minar/minar.h"
-#include "mbed-util/FunctionPointer.h"
+#include "core-util/FunctionPointer.h"
 
 using minar::Scheduler;
 using namespace mbed::util;
