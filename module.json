@@ -14,9 +14,9 @@
     "nanostack-event-loop"
   ],
   "dependencies": {
-    "nanostack-libservice": "~3.0.0",
+    "nanostack-libservice": "^3.0.0",
     "mbed-6lowpan-eventloop-adaptor": "~0.0.6",
-    "minar": "~0.8.0"
+    "minar": "<1.0.0"
   },
   "targetDependencies": {}
 }
