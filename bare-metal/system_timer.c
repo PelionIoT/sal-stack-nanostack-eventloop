@@ -213,14 +213,15 @@ void system_timer_tick_update(uint32_t ticks)
     run_time_tick_ticks += ticks;
     ns_list_foreach_safe(sys_timer_struct_s, cur, &system_timer_list) {
         if (cur->timer_sys_launch_time <= ticks) {
-            arm_event_s event;
-            event.receiver = cur->timer_sys_launch_receiver;
-            event.sender = 0; /**< Event sender Tasklet ID */
-            event.data_ptr = NULL;
-            event.event_type = cur->timer_event_type;
-            event.event_id = cur->timer_sys_launch_message;
-            event.event_data = 0;
-            event.priority = ARM_LIB_MED_PRIORITY_EVENT;
+            arm_event_s event = {
+                .receiver = cur->timer_sys_launch_receiver,
+                .sender = 0, /**< Event sender Tasklet ID */
+                .data_ptr = NULL,
+                .event_type = cur->timer_event_type,
+                .event_id = cur->timer_sys_launch_message,
+                .event_data = 0,
+                .priority = ARM_LIB_MED_PRIORITY_EVENT,
+            };
             eventOS_event_send(&event);
             ns_list_remove(&system_timer_list, cur);
             ns_list_add_to_start(&system_timer_free, cur);

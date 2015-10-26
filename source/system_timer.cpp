@@ -23,8 +23,8 @@
 #include "eventOS_event_timer.h"
 #include "minar/minar.h"
 #include "mbed/mbed.h"
-#include "mbed-util/FunctionPointer.h"
-#include "mbed-util/Event.h"
+#include "core-util/FunctionPointer.h"
+#include "core-util/Event.h"
 
 using minar::Scheduler;
 using minar::milliseconds;
