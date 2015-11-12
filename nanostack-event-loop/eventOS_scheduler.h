@@ -21,6 +21,10 @@ extern "C" {
 #endif
 #include "ns_types.h"
 
+/* Compatibility with older ns_types.h */
+#ifndef NS_NORETURN
+#define NS_NORETURN
+#endif
 
 /**
  * \brief Initialise event scheduler.
@@ -46,7 +50,7 @@ extern void eventOS_scheduler_run_until_idle(void);
  * Loops forever processing events from the queue.
  * Calls eventOS_scheduler_idle() whenever event queue is empty.
  */
-extern noreturn void eventOS_scheduler_run(void);
+extern NS_NORETURN void eventOS_scheduler_run(void);
 /**
  * \brief Disable Event scheduler Timers
  *
