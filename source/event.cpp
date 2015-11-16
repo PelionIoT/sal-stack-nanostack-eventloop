@@ -323,7 +323,7 @@ void eventOS_scheduler_run_until_idle(void)
  * Function Read and handle Cores Event and switch/enable tasklet which are event receiver. WhenEvent queue is empty it goes to sleep
  *
  */
-noreturn void eventOS_scheduler_run(void)
+NS_NORETURN void eventOS_scheduler_run(void)
 {
     while (1) {
         if (!eventOS_scheduler_dispatch_event()) {

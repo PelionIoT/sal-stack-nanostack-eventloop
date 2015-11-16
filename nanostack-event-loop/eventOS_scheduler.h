@@ -50,7 +50,7 @@ extern void eventOS_scheduler_run_until_idle(void);
  * Loops forever processing events from the queue.
  * Calls eventOS_scheduler_idle() whenever event queue is empty.
  */
-extern NS_NORETURN void eventOS_scheduler_run(void);
+NS_NORETURN extern void eventOS_scheduler_run(void);
 /**
  * \brief Disable Event scheduler Timers
  *
