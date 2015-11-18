@@ -42,9 +42,9 @@ bool eventOS_scheduler_dispatch_event(void);
 
 /**
  * \brief Process events until no more events to process.
- *
  */
 extern void eventOS_scheduler_run_until_idle(void);
+
 /**
  * \brief Start Event scheduler.
  * Loops forever processing events from the queue.
@@ -54,12 +54,12 @@ extern NS_NORETURN void eventOS_scheduler_run(void);
 /**
  * \brief Disable Event scheduler Timers
  *
- *
  * \return 0 Timer Stop OK
  * \return -1 Timer Stop Fail
  *
  * */
 int eventOS_scheduler_timer_stop(void);
+
 /**
  * \brief Synch Event scheduler timer after sleep
  *
@@ -80,9 +80,9 @@ int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks);
  *
  * */
 extern int8_t eventOS_scheduler_get_active_tasklet(void);
+
 /**
  * \brief Set manually Active Tasklet ID
- *
  *
  * \param tasklet requested tasklet ID
  *
@@ -91,28 +91,34 @@ extern  void eventOS_scheduler_set_active_tasklet(int8_t tasklet);
 
 /**
  * \brief Event scheduler loop idle Callback.
- *
- * Needs to be ported for the platform if you are using eventOS_scheduler_run().
- *
+
+ * Note! This method is called only by eventOS_scheduler_run, needs to be
+ * ported for the platform only if you are using eventOS_scheduler_run().
  */
 extern void eventOS_scheduler_idle(void);
 
 /**
- * \brief This function will be called when stack enter idle state and start waiting signal.
+ * \brief This function will be called when stack enter idle state and start
+ *  waiting signal.
+ *
+ * Note! This method is called only by reference implementation of idle. Needs
+ * to be ported for the platform only if you are using reference implementation.
  */
 extern void eventOS_scheduler_wait(void);
 
 /**
- * \brief This function will be called when stack receive event and could wake from idle.
+ * \brief This function will be called when stack receives an event.
  */
 extern void eventOS_scheduler_signal(void);
 
 /**
  * \brief This function will be called when stack can enter deep sleep state in detected time.
  *
- * \param sleep_time_ms Time in milliseconds to sleep
+ * Note! This method is called only by reference implementation of idle. Needs to be
+ * ported for the platform only if you are using reference implementation.
  *
- * \return sleeped time in milliseconds
+ * \param sleep_time_ms Time in milliseconds to sleep
+ * \return time slept in milliseconds
  */
 extern uint32_t eventOS_scheduler_sleep(uint32_t sleep_time_ms);
 

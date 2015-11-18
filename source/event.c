@@ -24,11 +24,6 @@
 
 #include "platform/arm_hal_interrupt.h"
 
-#include "minar/minar.h"
-#include "core-util/FunctionPointer.h"
-
-using minar::Scheduler;
-using namespace mbed::util;
 
 typedef struct arm_core_tasklet_list_s {
     int8_t id; /**< Event handler Tasklet ID */
@@ -47,7 +42,7 @@ static NS_LIST_DEFINE(free_event_entry, arm_core_event_s, link);
 
 /** Curr_tasklet tell to core and platform which task_let is active, Core Update this automatic when switch Tasklet. */
 int8_t curr_tasklet = 0;
-static volatile bool run_scheduled = false;
+
 
 static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void);
 static arm_core_event_s *event_dynamically_allocate(void);
@@ -90,30 +85,30 @@ int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uin
     }
 
     //Allocate new
-    arm_core_tasklet_list_s *new_task = tasklet_dynamically_allocate();
-    if (!new_task) {
+    arm_core_tasklet_list_s *new = tasklet_dynamically_allocate();
+    if (!new) {
         return -2;
     }
 
     event_tmp = event_core_get();
     if (!event_tmp) {
-        ns_dyn_mem_free(new_task);
+        ns_dyn_mem_free(new);
         return -2;
     }
 
     //Fill in tasklet; add to list
-    new_task->id = tasklet_get_free_id();
-    new_task->func_ptr = handler_func_ptr;
-    ns_list_add_to_end(&arm_core_tasklet_list, new_task);
+    new->id = tasklet_get_free_id();
+    new->func_ptr = handler_func_ptr;
+    ns_list_add_to_end(&arm_core_tasklet_list, new);
 
     //Queue "init" event for the new task
-    event_tmp->data.receiver = new_task->id;
+    event_tmp->data.receiver = new->id;
     event_tmp->data.sender = 0;
     event_tmp->data.event_type = init_event_type;
     event_tmp->data.event_data = 0;
     event_core_write(event_tmp);
 
-    return new_task->id;
+    return new->id;
 }
 
 /**
@@ -142,12 +137,12 @@ int8_t eventOS_event_send(arm_event_s *event)
 
 static arm_core_event_s *event_dynamically_allocate(void)
 {
-    return (arm_core_event_s*)ns_dyn_mem_alloc(sizeof(arm_core_event_s));
+    return ns_dyn_mem_alloc(sizeof(arm_core_event_s));
 }
 
 static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void)
 {
-    return (arm_core_tasklet_list_s*)ns_dyn_mem_alloc(sizeof(arm_core_tasklet_list_s));
+    return ns_dyn_mem_alloc(sizeof(arm_core_tasklet_list_s));
 }
 
 
@@ -203,11 +198,6 @@ void event_core_write(arm_core_event_s *event)
     }
     if (!added) {
         ns_list_add_to_end(&event_queue_active, event);
-    }
-
-    if (!run_scheduled) {
-        Scheduler::postCallback(FunctionPointer0<void>(eventOS_scheduler_run_until_idle).bind()).tolerance(0);
-        run_scheduled = true;
     }
 
     /* Wake From Idle */
@@ -313,7 +303,6 @@ bool eventOS_scheduler_dispatch_event(void)
 void eventOS_scheduler_run_until_idle(void)
 {
     while (eventOS_scheduler_dispatch_event());
-    run_scheduled = false;
 }
 
 /**
