@@ -374,6 +374,8 @@ int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
                 if (current_timer->timer_state == NS_TIMER_HOLD) {
                     if (current_timer->remaining_slots == first_timer->remaining_slots) {
                         current_timer->timer_state = NS_TIMER_ACTIVE;
+                    } else {
+                        current_timer->remaining_slots -= first_timer->remaining_slots;
                     }
                 }
             }
