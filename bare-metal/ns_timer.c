@@ -345,8 +345,8 @@ int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
     current_timer->remaining_slots = 0;
 
     /*Check if some timer is already active*/
-    ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list) {
-        if (current_timer->timer_state == NS_TIMER_ACTIVE) {
+    ns_list_foreach(ns_timer_struct, t, &ns_timer_list) {
+        if (t->timer_state == NS_TIMER_ACTIVE) {
             active_timer_found = true;
             break;
         }
@@ -355,12 +355,12 @@ int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
     if (!active_timer_found) {
         pl_timer_remaining_slots = platform_timer_get_remaining_slots();
         /*Find hold-labelled timer with the least remaining slots*/
-        ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list) {
-            if (current_timer->timer_state == NS_TIMER_HOLD) {
-                current_timer->remaining_slots += pl_timer_remaining_slots;
+        ns_list_foreach(ns_timer_struct, t, &ns_timer_list) {
+            if (t->timer_state == NS_TIMER_HOLD) {
+                t->remaining_slots += pl_timer_remaining_slots;
 
-                if (!first_timer || current_timer->remaining_slots < first_timer->remaining_slots) {
-                    first_timer = current_timer;
+                if (!first_timer || t->remaining_slots < first_timer->remaining_slots) {
+                    first_timer = t;
                 }
             }
         }
@@ -370,12 +370,12 @@ int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
             /*Start HAL timer*/
             ns_timer_start_pl_timer(first_timer->remaining_slots);
             /*If some of the other hold-labelled timers have the same remaining slots as the timer_tmp, mark them active*/
-            ns_list_foreach(ns_timer_struct, current_timer, &ns_timer_list) {
-                if (current_timer->timer_state == NS_TIMER_HOLD) {
-                    if (current_timer->remaining_slots == first_timer->remaining_slots) {
-                        current_timer->timer_state = NS_TIMER_ACTIVE;
+            ns_list_foreach(ns_timer_struct, t, &ns_timer_list) {
+                if (t->timer_state == NS_TIMER_HOLD) {
+                    if (t->remaining_slots == first_timer->remaining_slots) {
+                        t->timer_state = NS_TIMER_ACTIVE;
                     } else {
-                        current_timer->remaining_slots -= first_timer->remaining_slots;
+                        t->remaining_slots -= first_timer->remaining_slots;
                     }
                 }
             }
