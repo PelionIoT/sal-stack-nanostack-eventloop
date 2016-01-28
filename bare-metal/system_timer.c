@@ -104,6 +104,8 @@ int8_t timer_sys_wakeup(void)
 
 static void timer_sys_interrupt(int8_t timer_id, uint16_t slots)
 {
+    (void)timer_id;
+    (void)slots;
     eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
 
     system_timer_tick_update(1);
