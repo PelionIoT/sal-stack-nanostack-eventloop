@@ -5,10 +5,10 @@
   "keywords": [],
   "author": "Seppo Takalo <seppo.takalo@arm.com>",
   "repository": {
-    "url": "git@github.com:ARMmbed/mbed-6lowpan-eventloop.git",
+    "url": "git@github.com:ARMmbed/sal-stack-nanostack-eventloop.git",
     "type": "git"
   },
-  "homepage": "https://github.com/ARMmbed/mbed-6lowpan-eventloop",
+  "homepage": "https://github.com/ARMmbed/sal-stack-nanostack-eventloop",
   "license": "Apache-2.0",
   "extraIncludes": [
     "nanostack-event-loop"
