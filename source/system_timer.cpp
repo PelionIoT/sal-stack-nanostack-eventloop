@@ -105,7 +105,7 @@ int8_t timer_sys_wakeup(void)
     // TODO: check if that's true
     if (NULL == sys_timer_handle) {
         Event e = FunctionPointer1<void, uint32_t>(system_timer_tick_update).bind(1);
-        sys_timer_handle = Scheduler::postCallback(e).period(milliseconds(TIMER_SYS_TICK_PERIOD)).getHandle();
+        sys_timer_handle = Scheduler::postCallback(e).tolerance(minar::milliseconds(TIMER_SYS_TICK_PERIOD/10)).period(milliseconds(TIMER_SYS_TICK_PERIOD)).getHandle();
     }
     return 0;
 }
