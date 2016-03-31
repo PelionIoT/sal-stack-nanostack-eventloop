@@ -122,6 +122,32 @@ extern void eventOS_scheduler_signal(void);
  */
 extern uint32_t eventOS_scheduler_sleep(uint32_t sleep_time_ms);
 
+/**
+ * \brief Lock a thread against the event loop thread
+ *
+ * This method can be provided by multi-threaded platforms to allow
+ * mutual exclusion with the event loop thread, for cases where
+ * code wants to work with both the event loop and other threads.
+ *
+ * A typical platform implementation would claim the same mutex
+ * before calling eventOS_scheduler_run() or
+ * eventOS_scheduler_dispatch(), and release it during
+ * eventOS_scheduler_idle().
+ *
+ * The mutex must count - nested calls from one thread return
+ * immediately. Thus calling this from inside an event callback
+ * is harmless.
+ */
+extern void eventOS_scheduler_mutex_wait(void);
+
+/**
+ * \brief Release the event loop mutex
+ *
+ * Release the mutex claimed with eventOS_scheduler_mutex_wait(),
+ * allowing the event loop to continue processing.
+ */
+extern void eventOS_scheduler_mutex_release(void);
+
 #ifdef __cplusplus
 }
 #endif
