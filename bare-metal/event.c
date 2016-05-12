@@ -201,8 +201,8 @@ void event_core_write(arm_core_event_s *event)
     }
 
     /* Wake From Idle */
-    eventOS_scheduler_signal();
     platform_exit_critical();
+    eventOS_scheduler_signal();
 }
 
 /**
