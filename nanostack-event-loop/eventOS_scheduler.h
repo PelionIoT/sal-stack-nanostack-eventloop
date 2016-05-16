@@ -148,6 +148,24 @@ extern void eventOS_scheduler_mutex_wait(void);
  */
 extern void eventOS_scheduler_mutex_release(void);
 
+/**
+ * \brief Check if the current thread owns the event mutex
+ *
+ * Check if the calling thread owns the scheduler mutex.
+ * This allows the ownership to be asserted if a function
+ * requires the mutex to be locked externally.
+ *
+ * The function is only intended as a debugging aid for
+ * users of eventOS_scheduler_mutex_wait() - it is not
+ * used by the event loop core itself.
+ *
+ * If the underlying mutex system does not support it,
+ * this may be implemented to always return true.
+ *
+ * \return true if the current thread owns the mutex
+ */
+extern bool eventOS_scheduler_mutex_am_owner(void);
+
 #ifdef __cplusplus
 }
 #endif
