@@ -35,19 +35,50 @@ typedef struct sys_timer_struct_s {
     ns_list_link_t link;
 } sys_timer_struct_s;
 
+#define TIMER_SLOTS_PER_MS			20
 #define TIMER_SYS_TICK_PERIOD       10 // milliseconds
-#define TIMER_SYS_TICK_SLOTS        (TIMER_SYS_TICK_PERIOD * 20) // 50us slots
+#define TIMER_SYS_TICK_SLOTS        (TIMER_SYS_TICK_PERIOD * TIMER_SLOTS_PER_SECOND) // 50us slots
 
 static uint32_t run_time_tick_ticks = 0;
 static NS_LIST_DEFINE(system_timer_free, sys_timer_struct_s, link);
 static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, link);
-static int8_t sys_timer_id = -1;
 
 
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
-static void timer_sys_interrupt(int8_t timer_id, uint16_t slots);
+static void timer_sys_interrupt(void);
 
+#define EVENT_LOOP_USE_PLATFORM_TICK_TIMER 1
+#ifndef EVENT_LOOP_USE_PLATFORM_TICK_TIMER
+/* Implement platform tick timer using eventOS timer */
+// platform tick timer callback function
+static void (*tick_timer_callback)(void);
+static int8_t tick_timer_id = -1;	// eventOS timer id for tick timer
 
+// EventOS timer callback function
+static void tick_timer_eventOS_callback(int8_t timer_id, uint16_t slots)
+{
+	// Not interested in timer id or slots
+    (void)slots;
+    // Call the tick timer callback
+    if (NULL != tick_timer_callback && timer_id == tick_timer_id) {
+    	tick_timer_callback();
+    }
+}
+
+static int8_t platform_tick_timer_register(void (*tick_timer_cb)(void)) {
+	tick_timer_callback = tick_timer_cb;
+	tick_timer_id = eventOS_callback_timer_register(tick_timer_eventOS_callback);
+	return tick_timer_id;
+}
+
+static int8_t platform_tick_timer_start(uint32_t milliseconds) {
+	return eventOS_callback_timer_start(tick_timer_id, TIMER_SLOTS_PER_MS * milliseconds);
+}
+
+static int8_t platform_tick_timer_stop(void) {
+	return eventOS_callback_timer_stop(tick_timer_id);
+}
+#endif
 
 /*
  * Initializes timers and starts system timer
@@ -55,8 +86,6 @@ static void timer_sys_interrupt(int8_t timer_id, uint16_t slots);
 void timer_sys_init(void)
 {
     run_time_tick_ticks = 0;
-
-    sys_timer_id = eventOS_callback_timer_register(timer_sys_interrupt);
 
     // Clear old timers
     ns_list_foreach_safe(sys_timer_struct_s, temp, &system_timer_list) {
@@ -76,9 +105,8 @@ void timer_sys_init(void)
         }
     }
 
-    if (sys_timer_id >= 0) {
-        eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
-    }
+    platform_tick_timer_register(timer_sys_interrupt);
+	platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
@@ -86,7 +114,7 @@ void timer_sys_init(void)
 /*-------------------SYSTEM TIMER FUNCTIONS--------------------------*/
 void timer_sys_disable(void)
 {
-    eventOS_callback_timer_stop(sys_timer_id);
+    platform_tick_timer_stop();
 }
 
 /*
@@ -94,20 +122,13 @@ void timer_sys_disable(void)
  */
 int8_t timer_sys_wakeup(void)
 {
-    int8_t ret_val = -1;
-    if (sys_timer_id >= 0) {
-        ret_val = eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
-    }
-    return ret_val;
+	platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
-static void timer_sys_interrupt(int8_t timer_id, uint16_t slots)
+static void timer_sys_interrupt(void)
 {
-    (void)timer_id;
-    (void)slots;
-    eventOS_callback_timer_start(sys_timer_id, TIMER_SYS_TICK_SLOTS);
-
+	platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
     system_timer_tick_update(1);
 }
 
