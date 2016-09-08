@@ -49,6 +49,11 @@ extern void platform_timer_disable(void);
  */
 extern uint16_t platform_timer_get_remaining_slots(void);
 /**
+ * \brief This function is API for enabling low resolution tick timer
+ *
+ */
+extern void platform_tick_timer_enable(void);
+/**
  * \brief This function is API for registering low resolution tick timer callback
  *
  * \return -1 for false, success otherwise

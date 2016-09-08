@@ -53,6 +53,7 @@ static void timer_sys_interrupt(void);
 
 #ifndef EVENTLOOP_USE_TICK_TIMER
 /* Implement platform tick timer using eventOS timer */
+static int8_t platform_tick_timer_start(uint32_t milliseconds);
 // platform tick timer callback function
 static void (*tick_timer_callback)(void);
 static int8_t tick_timer_id = -1;	// eventOS timer id for tick timer
@@ -67,6 +68,11 @@ static void tick_timer_eventOS_callback(int8_t timer_id, uint16_t slots)
         platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
         tick_timer_callback();
     }
+}
+
+void platform_tick_timer_enable(void)
+{
+    platform_timer_enable();
 }
 
 static int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
