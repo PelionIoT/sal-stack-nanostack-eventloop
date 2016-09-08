@@ -26,6 +26,10 @@
 #define ST_MAX 6
 #endif
 
+#ifdef MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#define EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#endif
+
 typedef struct sys_timer_struct_s {
     uint32_t timer_sys_launch_time;
     int8_t timer_sys_launch_receiver;
@@ -47,7 +51,7 @@ static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, link);
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(void);
 
-#ifndef MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#ifndef EVENTLOOP_USE_TICK_TIMER
 /* Implement platform tick timer using eventOS timer */
 // platform tick timer callback function
 static void (*tick_timer_callback)(void);
@@ -60,6 +64,7 @@ static void tick_timer_eventOS_callback(int8_t timer_id, uint16_t slots)
     (void)slots;
     // Call the tick timer callback
     if (NULL != tick_timer_callback && timer_id == tick_timer_id) {
+        platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
         tick_timer_callback();
     }
 }
@@ -105,7 +110,7 @@ void timer_sys_init(void)
     }
 
     platform_tick_timer_register(timer_sys_interrupt);
-	platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
@@ -121,13 +126,12 @@ void timer_sys_disable(void)
  */
 int8_t timer_sys_wakeup(void)
 {
-	platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
 static void timer_sys_interrupt(void)
 {
-	platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
     system_timer_tick_update(1);
 }
 
