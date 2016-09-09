@@ -17,6 +17,7 @@
 #include "ns_list.h"
 #include "timer_sys.h"
 #include "platform/arm_hal_interrupt.h"
+#include "platform/arm_hal_timer.h"
 #include "ns_timer.h"
 #include "nsdynmemLIB.h"
 #include "eventOS_event.h"
@@ -53,7 +54,7 @@ static void timer_sys_interrupt(void);
 
 #ifndef EVENTLOOP_USE_TICK_TIMER
 /* Implement platform tick timer using eventOS timer */
-static int8_t platform_tick_timer_start(uint32_t milliseconds);
+int8_t platform_tick_timer_start(uint32_t milliseconds);
 // platform tick timer callback function
 static void (*tick_timer_callback)(void);
 static int8_t tick_timer_id = -1;	// eventOS timer id for tick timer
@@ -75,19 +76,19 @@ void platform_tick_timer_enable(void)
     platform_timer_enable();
 }
 
-static int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
+int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
 {
     tick_timer_callback = tick_timer_cb;
     tick_timer_id = eventOS_callback_timer_register(tick_timer_eventOS_callback);
     return tick_timer_id;
 }
 
-static int8_t platform_tick_timer_start(uint32_t milliseconds)
+int8_t platform_tick_timer_start(uint32_t milliseconds)
 {
     return eventOS_callback_timer_start(tick_timer_id, TIMER_SLOTS_PER_MS * milliseconds);
 }
 
-static int8_t platform_tick_timer_stop(void)
+int8_t platform_tick_timer_stop(void)
 {
     return eventOS_callback_timer_stop(tick_timer_id);
 }
