@@ -27,10 +27,6 @@
 #define ST_MAX 6
 #endif
 
-#ifdef MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
-#define NS_EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
-#endif
-
 typedef struct sys_timer_struct_s {
     uint32_t timer_sys_launch_time;
     int8_t timer_sys_launch_receiver;

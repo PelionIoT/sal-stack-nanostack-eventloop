@@ -15,6 +15,11 @@
  */
 #ifndef ARM_HAL_TIMER_H_
 #define ARM_HAL_TIMER_H_
+
+#ifdef MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#define NS_EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,6 +53,8 @@ extern void platform_timer_disable(void);
  * \return 50us time slot remaining
  */
 extern uint16_t platform_timer_get_remaining_slots(void);
+
+#ifdef NS_EVENTLOOP_USE_TICK_TIMER
 /**
  * \brief This function is API for enabling low resolution tick timer
  *
@@ -74,6 +81,8 @@ extern int8_t platform_tick_timer_start(uint32_t milliseconds);
  * \return -1 for failure, success otherwise
  */
 extern int8_t platform_tick_timer_stop(void);
+
+#endif // NS_EVENTLOOP_USE_TICK_TIMER
 
 #ifdef __cplusplus
 }
