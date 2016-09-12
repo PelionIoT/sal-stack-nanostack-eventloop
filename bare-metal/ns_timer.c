@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "ns_types.h"
 #include "ns_list.h"
 #include "ns_timer.h"
@@ -21,6 +22,7 @@
 #include "platform/arm_hal_timer.h"
 #include "nsdynmemLIB.h"
 
+#ifndef NS_EXCLUDE_HIGHRES_TIMER
 typedef enum ns_timer_state_e {
     NS_TIMER_ACTIVE = 0,        // Will run on the next HAL interrupt
     NS_TIMER_HOLD,              // Will run on a later HAL interrupt
@@ -387,3 +389,4 @@ exit:
 
     return retval;
 }
+#endif // NS_EXCLUDE_HIGHRES_TIMER
