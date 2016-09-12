@@ -28,7 +28,7 @@
 #endif
 
 #ifdef MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
-#define EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#define NS_EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
 #endif
 
 typedef struct sys_timer_struct_s {
@@ -52,7 +52,7 @@ static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, link);
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(void);
 
-#ifndef EVENTLOOP_USE_TICK_TIMER
+#ifndef NS_EVENTLOOP_USE_TICK_TIMER
 /* Implement platform tick timer using eventOS timer */
 int8_t platform_tick_timer_start(uint32_t milliseconds);
 // platform tick timer callback function
@@ -92,7 +92,7 @@ int8_t platform_tick_timer_stop(void)
 {
     return eventOS_callback_timer_stop(tick_timer_id);
 }
-#endif
+#endif // NS_EVENTLOOP_USE_TICK_TIMER
 
 /*
  * Initializes timers and starts system timer
