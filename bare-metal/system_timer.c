@@ -67,11 +67,6 @@ static void tick_timer_eventOS_callback(int8_t timer_id, uint16_t slots)
     }
 }
 
-/*void platform_tick_timer_enable(void)
-{
-    platform_timer_enable();
-}*/
-
 int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
 {
     tick_timer_callback = tick_timer_cb;
