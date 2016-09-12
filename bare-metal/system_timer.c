@@ -40,7 +40,7 @@ typedef struct sys_timer_struct_s {
     ns_list_link_t link;
 } sys_timer_struct_s;
 
-#define TIMER_SLOTS_PER_MS			20
+#define TIMER_SLOTS_PER_MS          20
 #define TIMER_SYS_TICK_PERIOD       10 // milliseconds
 #define TIMER_SYS_TICK_SLOTS        (TIMER_SYS_TICK_PERIOD * TIMER_SLOTS_PER_SECOND) // 50us slots
 
@@ -53,8 +53,8 @@ static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(void);
 
 #ifndef NS_EVENTLOOP_USE_TICK_TIMER
-/* Implement platform tick timer using eventOS timer */
 int8_t platform_tick_timer_start(uint32_t milliseconds);
+/* Implement platform tick timer using eventOS timer */
 // platform tick timer callback function
 static void (*tick_timer_callback)(void);
 static int8_t tick_timer_id = -1;	// eventOS timer id for tick timer
@@ -65,7 +65,7 @@ static void tick_timer_eventOS_callback(int8_t timer_id, uint16_t slots)
     // Not interested in timer id or slots
     (void)slots;
     // Call the tick timer callback
-    if (NULL != tick_timer_callback && timer_id == tick_timer_id) {
+    if (tick_timer_callback != NULL && timer_id == tick_timer_id) {
         platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
         tick_timer_callback();
     }
@@ -136,7 +136,7 @@ void timer_sys_disable(void)
  */
 int8_t timer_sys_wakeup(void)
 {
-    platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    return platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
