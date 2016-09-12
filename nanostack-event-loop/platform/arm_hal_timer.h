@@ -54,22 +54,24 @@ extern uint16_t platform_timer_get_remaining_slots(void);
  */
 extern void platform_tick_timer_enable(void);
 /**
- * \brief This function is API for registering low resolution tick timer callback
+ * \brief This function is API for registering low resolution tick timer callback.
  *
- * \return -1 for false, success otherwise
+ * \return -1 for failure, success otherwise
  */
 extern int8_t platform_tick_timer_register(void (*tick_timer_cb_handler)(void));
 /**
- * \brief This function is API for starting the low resolution tick timer
+ * \brief This function is API for starting the low resolution tick timer. The callback
+ *        set with platform_tick_timer_register gets called periodically until stopped
+ *        by calling platform_tick_timer_stop.
  *
  * \param milliseconds define how many milliseconds time period will be started
- * \return -1 for false, success otherwise
+ * \return -1 for failure, success otherwise
  */
 extern int8_t platform_tick_timer_start(uint32_t milliseconds);
 /**
  * \brief This function is API for stopping the low resolution tick timer
  *
- * \return -1 for false, success otherwise
+ * \return -1 for failure, success otherwise
  */
 extern int8_t platform_tick_timer_stop(void);
 
