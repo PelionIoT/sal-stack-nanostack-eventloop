@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "ns_types.h"
 #include "ns_list.h"
 #include "ns_timer.h"
@@ -21,6 +22,7 @@
 #include "platform/arm_hal_timer.h"
 #include "nsdynmemLIB.h"
 
+#ifndef NS_EXCLUDE_HIGHRES_TIMER
 typedef enum ns_timer_state_e {
     NS_TIMER_ACTIVE = 0,        // Will run on the next HAL interrupt
     NS_TIMER_HOLD,              // Will run on a later HAL interrupt
@@ -374,6 +376,8 @@ int8_t eventOS_callback_timer_stop(int8_t ns_timer_id)
                 if (current_timer->timer_state == NS_TIMER_HOLD) {
                     if (current_timer->remaining_slots == first_timer->remaining_slots) {
                         current_timer->timer_state = NS_TIMER_ACTIVE;
+                    } else {
+                        current_timer->remaining_slots -= first_timer->remaining_slots;
                     }
                 }
             }
@@ -385,3 +389,4 @@ exit:
 
     return retval;
 }
+#endif // NS_EXCLUDE_HIGHRES_TIMER

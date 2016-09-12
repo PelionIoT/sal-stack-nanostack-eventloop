@@ -49,7 +49,7 @@ static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(void);
 
 #ifndef NS_EVENTLOOP_USE_TICK_TIMER
-static int8_t platform_tick_timer_start(uint32_t milliseconds);
+static int8_t platform_tick_timer_start(uint32_t period_ms);
 /* Implement platform tick timer using eventOS timer */
 // platform tick timer callback function
 static void (*tick_timer_callback)(void);
@@ -74,9 +74,9 @@ static int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
     return tick_timer_id;
 }
 
-static int8_t platform_tick_timer_start(uint32_t milliseconds)
+static int8_t platform_tick_timer_start(uint32_t period_ms)
 {
-    return eventOS_callback_timer_start(tick_timer_id, TIMER_SLOTS_PER_MS * milliseconds);
+    return eventOS_callback_timer_start(tick_timer_id, TIMER_SLOTS_PER_MS * period_ms);
 }
 
 static int8_t platform_tick_timer_stop(void)
@@ -142,7 +142,7 @@ static void timer_sys_interrupt(void)
 
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void)
 {
-    return ns_dyn_mem_alloc(sizeof(sys_timer_struct_s));
+    return (sys_timer_struct_s*)ns_dyn_mem_alloc(sizeof(sys_timer_struct_s));
 }
 
 static sys_timer_struct_s *timer_struct_get(void)
