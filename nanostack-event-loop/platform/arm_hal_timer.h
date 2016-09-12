@@ -56,12 +56,8 @@ extern uint16_t platform_timer_get_remaining_slots(void);
 
 #ifdef NS_EVENTLOOP_USE_TICK_TIMER
 /**
- * \brief This function is API for enabling low resolution tick timer
- *
- */
-extern void platform_tick_timer_enable(void);
-/**
- * \brief This function is API for registering low resolution tick timer callback.
+ * \brief This function is API for registering low resolution tick timer callback. Also does
+ *        any necessary initialization of the tick timer.
  *
  * \return -1 for failure, success otherwise
  */
@@ -71,10 +67,10 @@ extern int8_t platform_tick_timer_register(void (*tick_timer_cb_handler)(void));
  *        set with platform_tick_timer_register gets called periodically until stopped
  *        by calling platform_tick_timer_stop.
  *
- * \param milliseconds define how many milliseconds time period will be started
+ * \param period_ms define how many milliseconds time period will be started
  * \return -1 for failure, success otherwise
  */
-extern int8_t platform_tick_timer_start(uint32_t milliseconds);
+extern int8_t platform_tick_timer_start(uint32_t period_ms);
 /**
  * \brief This function is API for stopping the low resolution tick timer
  *
