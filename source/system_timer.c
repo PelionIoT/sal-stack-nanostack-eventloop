@@ -38,7 +38,6 @@ typedef struct sys_timer_struct_s {
 
 #define TIMER_SLOTS_PER_MS          20
 #define TIMER_SYS_TICK_PERIOD       10 // milliseconds
-#define TIMER_SYS_TICK_SLOTS        (TIMER_SYS_TICK_PERIOD * TIMER_SLOTS_PER_SECOND) // 50us slots
 
 static uint32_t run_time_tick_ticks = 0;
 static NS_LIST_DEFINE(system_timer_free, sys_timer_struct_s, link);
