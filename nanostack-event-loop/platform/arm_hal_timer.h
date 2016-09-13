@@ -16,7 +16,7 @@
 #ifndef ARM_HAL_TIMER_H_
 #define ARM_HAL_TIMER_H_
 
-#ifdef MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#if MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
 #define NS_EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
 #endif
 
@@ -58,7 +58,7 @@ extern void platform_timer_disable(void);
  */
 extern uint16_t platform_timer_get_remaining_slots(void);
 
-#ifdef NS_EVENTLOOP_USE_TICK_TIMER
+#if NS_EVENTLOOP_USE_TICK_TIMER
 /**
  * \brief This function is API for registering low resolution tick timer callback. Also does
  *        any necessary initialization of the tick timer.

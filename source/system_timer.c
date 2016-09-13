@@ -47,7 +47,7 @@ static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, link);
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(void);
 
-#ifndef NS_EVENTLOOP_USE_TICK_TIMER
+#if !NS_EVENTLOOP_USE_TICK_TIMER
 static int8_t platform_tick_timer_start(uint32_t period_ms);
 /* Implement platform tick timer using eventOS timer */
 // platform tick timer callback function
@@ -82,7 +82,7 @@ static int8_t platform_tick_timer_stop(void)
 {
     return eventOS_callback_timer_stop(tick_timer_id);
 }
-#endif // NS_EVENTLOOP_USE_TICK_TIMER
+#endif // !NS_EVENTLOOP_USE_TICK_TIMER
 
 /*
  * Initializes timers and starts system timer
