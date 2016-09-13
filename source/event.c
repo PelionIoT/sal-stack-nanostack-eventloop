@@ -228,9 +228,6 @@ void eventOS_scheduler_init(void)
     }
 
     /* Init Generic timer module */
-#ifndef NS_EXCLUDE_HIGHRES_TIMER
-    ns_timer_init();
-#endif
     timer_sys_init();               //initialize timer
     /* Set Tasklett switcher to Idle */
     curr_tasklet = 0;
