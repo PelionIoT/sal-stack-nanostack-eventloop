@@ -9,7 +9,7 @@
 #include "platform/arm_hal_timer.h"
 #include "platform/arm_hal_interrupt.h"
 
-#if defined(NS_EVENTLOOP_USE_TICK_TIMER) && defined(YOTTA_CFG)
+#if NS_EVENTLOOP_USE_TICK_TIMER && defined(YOTTA_CFG_MINAR)
 
 #include "minar/minar.h"
 #include "mbed-drivers/mbed.h"
@@ -24,6 +24,7 @@ using minar::callback_handle_t;
 using namespace mbed::util;
 
 static callback_handle_t sys_timer_handle;
+static void (*tick_timer_callback)(void);
 
 void timer_callback(void const *funcArgument)
 {
@@ -46,7 +47,7 @@ int8_t platform_tick_timer_start(uint32_t period_ms)
     if (sys_timer_handle != NULL) {
         return 0; // Timer already started already so return success
     }
-    Event e = FunctionPointer1<void, uint32_t>(timer_callback).bind(NULL);
+    Event e = FunctionPointer1<void, void const *>(timer_callback).bind(NULL);
     if (e != NULL) {
         sys_timer_handle = Scheduler::postCallback(e).period(milliseconds(period_ms)).getHandle();
         if (sys_timer_handle != NULL) {

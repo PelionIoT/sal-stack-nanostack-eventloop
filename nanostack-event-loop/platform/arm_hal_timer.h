@@ -17,7 +17,12 @@
 #define ARM_HAL_TIMER_H_
 
 #if MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
-#define NS_EVENTLOOP_USE_TICK_TIMER MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#define NS_EVENTLOOP_USE_TICK_TIMER     MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#endif
+
+// For mbedOS 3 and minar use platform tick timer by default, highres timers should come from eventloop adaptor
+#if defined(YOTTA_CFG_MINAR)
+#define NS_EVENTLOOP_USE_TICK_TIMER     1
 #endif
 
 #ifdef __cplusplus
