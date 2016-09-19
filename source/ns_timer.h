@@ -23,7 +23,7 @@ extern "C" {
 extern int8_t ns_timer_sleep(void);
 
 #ifdef MBED_CONF_NANOSTACK_EVENTLOOP_EXCLUDE_HIGHRES_TIMER
-#define NS_EXCLUDE_HIGHRES_TIMER   MBED_CONF_NANOSTACK_EVENTLOOP_EXCLUDE_HIGHRES_TIMER
+#define NS_EXCLUDE_HIGHRES_TIMER   1
 #endif
 
 #ifdef __cplusplus

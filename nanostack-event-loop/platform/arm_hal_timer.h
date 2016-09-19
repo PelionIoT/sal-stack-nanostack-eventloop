@@ -17,11 +17,11 @@
 #define ARM_HAL_TIMER_H_
 
 #if MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
-#define NS_EVENTLOOP_USE_TICK_TIMER     MBED_CONF_NANOSTACK_EVENTLOOP_USE_PLATFORM_TICK_TIMER
+#define NS_EVENTLOOP_USE_TICK_TIMER     1
 #endif
 
 // For mbedOS 3 and minar use platform tick timer by default, highres timers should come from eventloop adaptor
-#if defined(YOTTA_CFG_MINAR)
+#ifdef YOTTA_CFG_MINAR
 #define NS_EVENTLOOP_USE_TICK_TIMER     1
 #endif
 
@@ -63,7 +63,7 @@ extern void platform_timer_disable(void);
  */
 extern uint16_t platform_timer_get_remaining_slots(void);
 
-#if NS_EVENTLOOP_USE_TICK_TIMER
+#ifdef NS_EVENTLOOP_USE_TICK_TIMER
 /**
  * \brief This function is API for registering low resolution tick timer callback. Also does
  *        any necessary initialization of the tick timer.

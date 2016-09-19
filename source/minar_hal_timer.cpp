@@ -9,7 +9,7 @@
 #include "platform/arm_hal_timer.h"
 #include "platform/arm_hal_interrupt.h"
 
-#if NS_EVENTLOOP_USE_TICK_TIMER && defined(YOTTA_CFG_MINAR)
+#if defined(NS_EVENTLOOP_USE_TICK_TIMER) && defined(YOTTA_CFG_MINAR)
 
 #include "minar/minar.h"
 #include "mbed-drivers/mbed.h"
