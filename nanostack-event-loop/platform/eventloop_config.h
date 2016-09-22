@@ -43,8 +43,8 @@
 /*
  * Include the user config file if defined
  */
-#ifdef EVENTLOOP_USER_CONFIG_FILE
-#include EVENTLOOP_USER_CONFIG_FILE
+#ifdef NS_EVENTLOOP_USER_CONFIG_FILE
+#include NS_EVENTLOOP_USER_CONFIG_FILE
 #endif
 
 #endif /* EVENTLOOP_CONFIG_H_ */
