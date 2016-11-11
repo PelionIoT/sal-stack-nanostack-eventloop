@@ -41,7 +41,6 @@ typedef struct ns_timer_struct {
 
 static NS_LIST_DEFINE(ns_timer_list, ns_timer_struct, link);
 
-
 #define NS_TIMER_RUNNING    1
 static uint8_t ns_timer_state = 0;
 
