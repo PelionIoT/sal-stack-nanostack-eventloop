@@ -40,6 +40,10 @@ static NS_LIST_DEFINE(arm_core_tasklet_list, arm_core_tasklet_list_s, link);
 static NS_LIST_DEFINE(event_queue_active, arm_core_event_s, link);
 static NS_LIST_DEFINE(free_event_entry, arm_core_event_s, link);
 
+// Statically allocate initial pool of events.
+#define STARTUP_EVENT_POOL_SIZE 10
+static arm_core_event_s startup_event_pool[STARTUP_EVENT_POOL_SIZE];
+
 /** Curr_tasklet tell to core and platform which task_let is active, Core Update this automatic when switch Tasklet. */
 int8_t curr_tasklet = 0;
 
@@ -122,16 +126,15 @@ int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uin
 */
 int8_t eventOS_event_send(arm_event_s *event)
 {
-    int8_t retval = -1;
     if (event_tasklet_handler_get(event->receiver)) {
         arm_core_event_s *event_tmp = event_core_get();
         if (event_tmp) {
             event_tmp->data = *event;
             event_core_write(event_tmp);
-            retval = 0;
+            return 0;
         }
     }
-    return retval;
+    return -1;
 }
 
 
@@ -167,7 +170,14 @@ arm_core_event_s *event_core_get(void)
 static void event_core_free_push(arm_core_event_s *free)
 {
     platform_enter_critical();
-    ns_list_add_to_start(&free_event_entry, free);
+
+    // Free all dynamically allocated events.
+    if ((free >= startup_event_pool) && (free < startup_event_pool+STARTUP_EVENT_POOL_SIZE)) {
+        ns_list_add_to_start(&free_event_entry, free);
+    } else {
+        ns_dyn_mem_free(free);
+    }
+
     platform_exit_critical();
 }
 
@@ -219,12 +229,9 @@ void eventOS_scheduler_init(void)
     ns_list_init(&event_queue_active);
     ns_list_init(&arm_core_tasklet_list);
 
-    //Allocate 10 entry
-    for (uint8_t i = 0; i < 10; i++) {
-        arm_core_event_s *event = event_dynamically_allocate();
-        if (event) {
-            ns_list_add_to_start(&free_event_entry, event);
-        }
+    //Add first 10 entries to "free" list
+    for (unsigned i = 0; i < (sizeof(startup_event_pool) / sizeof(startup_event_pool[0])); i++) {
+        ns_list_add_to_start(&free_event_entry, &startup_event_pool[i]);
     }
 
     /* Init Generic timer module */
