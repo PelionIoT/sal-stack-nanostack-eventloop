@@ -238,6 +238,7 @@ void system_timer_tick_update(uint32_t ticks)
     run_time_tick_ticks += ticks;
     ns_list_foreach_safe(sys_timer_struct_s, cur, &system_timer_list) {
         if (cur->timer_sys_launch_time <= ticks) {
+            cur->timer_sys_launch_time = 0;
             arm_event_s event = {
                 .receiver = cur->timer_sys_launch_receiver,
                 .sender = 0, /**< Event sender Tasklet ID */
@@ -247,9 +248,10 @@ void system_timer_tick_update(uint32_t ticks)
                 .event_data = 0,
                 .priority = ARM_LIB_MED_PRIORITY_EVENT,
             };
-            eventOS_event_send(&event);
-            ns_list_remove(&system_timer_list, cur);
-            ns_list_add_to_start(&system_timer_free, cur);
+            if (eventOS_event_send(&event) == 0) {  // Remove events from the list, only if there was memory to call their handler.
+                ns_list_remove(&system_timer_list, cur);
+                ns_list_add_to_start(&system_timer_free, cur);
+            }
         } else {
             cur->timer_sys_launch_time -= ticks;
         }
