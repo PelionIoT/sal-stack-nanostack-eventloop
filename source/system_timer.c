@@ -36,6 +36,8 @@ typedef struct sys_timer_struct_s {
     ns_list_link_t link;
 } sys_timer_struct_s;
 
+static sys_timer_struct_s startup_sys_timer_pool[ST_MAX];
+
 #define TIMER_SLOTS_PER_MS          20
 #define TIMER_SYS_TICK_PERIOD       10 // milliseconds
 
@@ -103,10 +105,7 @@ void timer_sys_init(void)
     }
 
     for (uint8_t i = 0; i < ST_MAX; i++) {
-        sys_timer_struct_s *temp = sys_timer_dynamically_allocate();
-        if (temp) {
-            ns_list_add_to_start(&system_timer_free, temp);
-        }
+        ns_list_add_to_start(&system_timer_free, &startup_sys_timer_pool[i]);
     }
 
     platform_tick_timer_register(timer_sys_interrupt);
