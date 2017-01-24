@@ -19,8 +19,8 @@
 /*
  * Undefine all internal flags before evaluating the configuration
  */
-#undef NS_EVENTLOOP_USE_TICK_TIMER
-#undef NS_EXCLUDE_HIGHRES_TIMER
+//#undef NS_EVENTLOOP_USE_TICK_TIMER
+//#undef NS_EXCLUDE_HIGHRES_TIMER
 
 /*
  * mbedOS 5 specific configuration flag mapping to internal flags
