@@ -58,6 +58,11 @@ static arm_core_tasklet_t *event_tasklet_handler_get(uint8_t tasklet_id)
     return NULL;
 }
 
+bool event_tasklet_handler_id_valid(uint8_t tasklet_id)
+{
+    return event_tasklet_handler_get(tasklet_id);
+}
+
 // XXX this can return 0, but 0 seems to mean "none" elsewhere? Or at least
 // curr_tasklet is reset to 0 in various places.
 static int8_t tasklet_get_free_id(void)
@@ -129,6 +134,12 @@ void eventOS_event_send_user_allocated(arm_event_storage_t *event)
     event_core_write(event);
 }
 
+void eventOS_event_send_timer_allocated(arm_event_storage_t *event)
+{
+    event->allocator = ARM_LIB_EVENT_TIMER;
+    event_core_write(event);
+}
+
 static arm_event_storage_t *event_dynamically_allocate(void)
 {
     arm_event_storage_t *event = ns_dyn_mem_temporary_alloc(sizeof(arm_event_storage_t));
@@ -172,6 +183,10 @@ static void event_core_free_push(arm_event_storage_t *free)
         case ARM_LIB_EVENT_DYNAMIC:
             // Free all dynamically allocated events.
             ns_dyn_mem_free(free);
+            break;
+        case ARM_LIB_EVENT_TIMER:
+            // Hand it back to the timer system
+            timer_sys_event_free(free);
             break;
         case ARM_LIB_EVENT_USER:
         default:

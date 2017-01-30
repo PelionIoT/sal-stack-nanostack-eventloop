@@ -59,6 +59,7 @@ typedef struct arm_event_storage {
         ARM_LIB_EVENT_STARTUP_POOL,
         ARM_LIB_EVENT_DYNAMIC,
         ARM_LIB_EVENT_USER,
+        ARM_LIB_EVENT_TIMER,
     } allocator;
     ns_list_link_t link;
 } arm_event_storage_t;

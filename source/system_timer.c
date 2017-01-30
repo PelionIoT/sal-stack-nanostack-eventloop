@@ -18,23 +18,24 @@
 #include "timer_sys.h"
 #include "platform/arm_hal_interrupt.h"
 #include "platform/arm_hal_timer.h"
-#include "ns_timer.h"
 #include "nsdynmemLIB.h"
 #include "eventOS_event.h"
+#include "event.h"
 #include "eventOS_callback_timer.h"
+
+#include "ns_timer.h"
 
 #ifndef ST_MAX
 #define ST_MAX 6
 #endif
 
+/* We can fit all required information into the base event object! */
 typedef struct sys_timer_struct_s {
-    uint32_t timer_sys_launch_time;
-    int8_t timer_sys_launch_receiver;
-    uint8_t timer_sys_launch_message;
-    uint8_t timer_event_type;
-
-    ns_list_link_t link;
+    arm_event_storage_t event;
 } sys_timer_struct_s;
+
+/* Just need to borrow the 32-bit data field for our timer */
+#define timer_sys_launch_time(timer) ((timer)->event.data.event_data)
 
 static sys_timer_struct_s startup_sys_timer_pool[ST_MAX];
 
@@ -42,8 +43,8 @@ static sys_timer_struct_s startup_sys_timer_pool[ST_MAX];
 #define TIMER_SYS_TICK_PERIOD       10 // milliseconds
 
 static uint32_t run_time_tick_ticks = 0;
-static NS_LIST_DEFINE(system_timer_free, sys_timer_struct_s, link);
-static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, link);
+static NS_LIST_DEFINE(system_timer_free, sys_timer_struct_s, event.link);
+static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, event.link);
 
 
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
@@ -157,6 +158,14 @@ static sys_timer_struct_s *timer_struct_get(void)
     return timer;
 }
 
+void timer_sys_event_free(arm_event_storage_t *event)
+{
+    platform_enter_critical();
+    sys_timer_struct_s *timer = NS_CONTAINER_OF(event, sys_timer_struct_s, event);
+    ns_list_add_to_start(&system_timer_free, timer);
+    platform_exit_critical();
+}
+
 uint32_t timer_get_runtime_ticks(void)  // only used in dev_stats_internal.c
 {
     uint32_t ret_val;
@@ -166,14 +175,17 @@ uint32_t timer_get_runtime_ticks(void)  // only used in dev_stats_internal.c
     return ret_val;
 }
 
-
-
 int8_t eventOS_event_timer_request(uint8_t snmessage, uint8_t event_type, int8_t tasklet_id, uint32_t time)
 {
-    int8_t res = -1;
-    sys_timer_struct_s *timer = NULL;
-
     platform_enter_critical();
+
+    // Because we use user-allocated events, they must get delivered to avoid
+    // a leak. Previously this call queued timers for invalid tasks, then they
+    // would go undelivered. Now it returns an error.
+    if (!event_tasklet_handler_id_valid(tasklet_id)) {
+        goto error;
+    }
+
     // Note that someone wanting 20ms gets 2 ticks, thanks to this test. 30ms would be 4 ticks.
     // And why shouldn't they be able to get a 1-tick callback?
     if (time > 2 * TIMER_SYS_TICK_PERIOD) {
@@ -183,17 +195,27 @@ int8_t eventOS_event_timer_request(uint8_t snmessage, uint8_t event_type, int8_t
     } else {
         time = 2;
     }
-    timer = timer_struct_get();
-    if (timer) {
-        timer->timer_sys_launch_message = snmessage;
-        timer->timer_sys_launch_receiver = tasklet_id;
-        timer->timer_event_type = event_type;
-        timer->timer_sys_launch_time = time;
-        ns_list_add_to_start(&system_timer_list, timer);
-        res = 0;
+    sys_timer_struct_s *timer = timer_struct_get();
+    if (!timer) {
+        goto error;
     }
+
+    // Fill in all the event data up-front, borrowing 1 field for the time.
+    timer->event.data.event_id = snmessage;
+    timer->event.data.receiver = tasklet_id;
+    timer->event.data.sender = 0;
+    timer->event.data.event_type = event_type;
+    timer->event.data.data_ptr = NULL;
+    timer->event.data.priority = ARM_LIB_MED_PRIORITY_EVENT;
+    timer_sys_launch_time(timer) = time;
+    ns_list_add_to_start(&system_timer_list, timer);
+
     platform_exit_critical();
-    return res;
+    return 0;
+
+error:
+    platform_exit_critical();
+    return -1;
 }
 
 int8_t eventOS_event_timer_cancel(uint8_t snmessage, int8_t tasklet_id)
@@ -201,7 +223,7 @@ int8_t eventOS_event_timer_cancel(uint8_t snmessage, int8_t tasklet_id)
     int8_t res = -1;
     platform_enter_critical();
     ns_list_foreach(sys_timer_struct_s, cur, &system_timer_list) {
-        if (cur->timer_sys_launch_receiver == tasklet_id && cur->timer_sys_launch_message == snmessage) {
+        if (cur->event.data.receiver == tasklet_id && cur->event.data.event_id == snmessage) {
             ns_list_remove(&system_timer_list, cur);
             ns_list_add_to_start(&system_timer_free, cur);
             res = 0;
@@ -220,8 +242,8 @@ uint32_t eventOS_event_timer_shortest_active_timer(void)
 
     platform_enter_critical();
     ns_list_foreach(sys_timer_struct_s, cur, &system_timer_list) {
-        if (ret_val == 0 || cur->timer_sys_launch_time < ret_val) {
-            ret_val = cur->timer_sys_launch_time;
+        if (ret_val == 0 || timer_sys_launch_time(cur) < ret_val) {
+            ret_val = timer_sys_launch_time(cur);
         }
     }
 
@@ -237,23 +259,16 @@ void system_timer_tick_update(uint32_t ticks)
     //Keep runtime time
     run_time_tick_ticks += ticks;
     ns_list_foreach_safe(sys_timer_struct_s, cur, &system_timer_list) {
-        if (cur->timer_sys_launch_time <= ticks) {
-            cur->timer_sys_launch_time = 0;
-            arm_event_s event = {
-                .receiver = cur->timer_sys_launch_receiver,
-                .sender = 0, /**< Event sender Tasklet ID */
-                .data_ptr = NULL,
-                .event_type = cur->timer_event_type,
-                .event_id = cur->timer_sys_launch_message,
-                .event_data = 0,
-                .priority = ARM_LIB_MED_PRIORITY_EVENT,
-            };
-            if (eventOS_event_send(&event) == 0) {  // Remove events from the list, only if there was memory to call their handler.
-                ns_list_remove(&system_timer_list, cur);
-                ns_list_add_to_start(&system_timer_free, cur);
-            }
+        if (timer_sys_launch_time(cur) <= ticks) {
+            // We were borrowing event_data for time - clear it to 0
+            timer_sys_launch_time(cur) = 0;
+            // Unthread from our list
+            ns_list_remove(&system_timer_list, cur);
+            // Make it an event (can't fail - no allocation)
+            // event system will call our timer_sys_event_free on event delivery.
+            eventOS_event_send_timer_allocated(&cur->event);
         } else {
-            cur->timer_sys_launch_time -= ticks;
+            timer_sys_launch_time(cur) -= ticks;
         }
     }
 
