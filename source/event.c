@@ -25,42 +25,42 @@
 #include "platform/arm_hal_interrupt.h"
 
 
-typedef struct arm_core_tasklet_list_s {
+typedef struct arm_core_tasklet {
     int8_t id; /**< Event handler Tasklet ID */
     void (*func_ptr)(arm_event_s *);
     ns_list_link_t link;
-} arm_core_tasklet_list_s;
+} arm_core_tasklet_t;
 
-typedef struct arm_core_event_s {
-    arm_event_s data;
-    ns_list_link_t link;
-} arm_core_event_s;
-
-static NS_LIST_DEFINE(arm_core_tasklet_list, arm_core_tasklet_list_s, link);
-static NS_LIST_DEFINE(event_queue_active, arm_core_event_s, link);
-static NS_LIST_DEFINE(free_event_entry, arm_core_event_s, link);
+static NS_LIST_DEFINE(arm_core_tasklet_list, arm_core_tasklet_t, link);
+static NS_LIST_DEFINE(event_queue_active, arm_event_storage_t, link);
+static NS_LIST_DEFINE(free_event_entry, arm_event_storage_t, link);
 
 // Statically allocate initial pool of events.
 #define STARTUP_EVENT_POOL_SIZE 10
-static arm_core_event_s startup_event_pool[STARTUP_EVENT_POOL_SIZE];
+static arm_event_storage_t startup_event_pool[STARTUP_EVENT_POOL_SIZE];
 
 /** Curr_tasklet tell to core and platform which task_let is active, Core Update this automatic when switch Tasklet. */
 int8_t curr_tasklet = 0;
 
 
-static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void);
-static arm_core_event_s *event_dynamically_allocate(void);
-static arm_core_event_s *event_core_get(void);
-static void event_core_write(arm_core_event_s *event);
+static arm_core_tasklet_t *tasklet_dynamically_allocate(void);
+static arm_event_storage_t *event_dynamically_allocate(void);
+static arm_event_storage_t *event_core_get(void);
+static void event_core_write(arm_event_storage_t *event);
 
-static arm_core_tasklet_list_s *event_tasklet_handler_get(uint8_t tasklet_id)
+static arm_core_tasklet_t *event_tasklet_handler_get(uint8_t tasklet_id)
 {
-    ns_list_foreach(arm_core_tasklet_list_s, cur, &arm_core_tasklet_list) {
+    ns_list_foreach(arm_core_tasklet_t, cur, &arm_core_tasklet_list) {
         if (cur->id == tasklet_id) {
             return cur;
         }
     }
     return NULL;
+}
+
+bool event_tasklet_handler_id_valid(uint8_t tasklet_id)
+{
+    return event_tasklet_handler_get(tasklet_id);
 }
 
 // XXX this can return 0, but 0 seems to mean "none" elsewhere? Or at least
@@ -79,17 +79,17 @@ static int8_t tasklet_get_free_id(void)
 
 int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uint8_t init_event_type)
 {
-    arm_core_event_s *event_tmp;
+    arm_event_storage_t *event_tmp;
 
     // XXX Do we really want to prevent multiple tasklets with same function?
-    ns_list_foreach(arm_core_tasklet_list_s, cur, &arm_core_tasklet_list) {
+    ns_list_foreach(arm_core_tasklet_t, cur, &arm_core_tasklet_list) {
         if (cur->func_ptr == handler_func_ptr) {
             return -1;
         }
     }
 
     //Allocate new
-    arm_core_tasklet_list_s *new = tasklet_dynamically_allocate();
+    arm_core_tasklet_t *new = tasklet_dynamically_allocate();
     if (!new) {
         return -2;
     }
@@ -115,19 +115,10 @@ int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uin
     return new->id;
 }
 
-/**
-* \brief Send event to  event scheduler.
-*
-* \param event pointer to pushed event.
-*
-* \return 0 Event push OK
-* \return -1 Memory allocation Fail
-*
-*/
-int8_t eventOS_event_send(arm_event_s *event)
+int8_t eventOS_event_send(const arm_event_t *event)
 {
     if (event_tasklet_handler_get(event->receiver)) {
-        arm_core_event_s *event_tmp = event_core_get();
+        arm_event_storage_t *event_tmp = event_core_get();
         if (event_tmp) {
             event_tmp->data = *event;
             event_core_write(event_tmp);
@@ -137,21 +128,35 @@ int8_t eventOS_event_send(arm_event_s *event)
     return -1;
 }
 
-
-static arm_core_event_s *event_dynamically_allocate(void)
+void eventOS_event_send_user_allocated(arm_event_storage_t *event)
 {
-    return ns_dyn_mem_alloc(sizeof(arm_core_event_s));
+    event->allocator = ARM_LIB_EVENT_USER;
+    event_core_write(event);
 }
 
-static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void)
+void eventOS_event_send_timer_allocated(arm_event_storage_t *event)
 {
-    return ns_dyn_mem_alloc(sizeof(arm_core_tasklet_list_s));
+    event->allocator = ARM_LIB_EVENT_TIMER;
+    event_core_write(event);
 }
 
-
-arm_core_event_s *event_core_get(void)
+static arm_event_storage_t *event_dynamically_allocate(void)
 {
-    arm_core_event_s *event;
+    arm_event_storage_t *event = ns_dyn_mem_temporary_alloc(sizeof(arm_event_storage_t));
+    if (event) {
+        event->allocator = ARM_LIB_EVENT_DYNAMIC;
+    }
+    return event;
+}
+
+static arm_core_tasklet_t *tasklet_dynamically_allocate(void)
+{
+    return ns_dyn_mem_alloc(sizeof(arm_core_tasklet_t));
+}
+
+arm_event_storage_t *event_core_get(void)
+{
+    arm_event_storage_t *event;
     platform_enter_critical();
     event = ns_list_get_first(&free_event_entry);
     if (event) {
@@ -167,26 +172,33 @@ arm_core_event_s *event_core_get(void)
     return event;
 }
 
-static void event_core_free_push(arm_core_event_s *free)
+static void event_core_free_push(arm_event_storage_t *free)
 {
-    platform_enter_critical();
-
-    // Free all dynamically allocated events.
-    if ((free >= startup_event_pool) && (free < startup_event_pool+STARTUP_EVENT_POOL_SIZE)) {
-        ns_list_add_to_start(&free_event_entry, free);
-    } else {
-        ns_dyn_mem_free(free);
+    switch (free->allocator) {
+        case ARM_LIB_EVENT_STARTUP_POOL:
+            platform_enter_critical();
+            ns_list_add_to_start(&free_event_entry, free);
+            platform_exit_critical();
+            break;
+        case ARM_LIB_EVENT_DYNAMIC:
+            // Free all dynamically allocated events.
+            ns_dyn_mem_free(free);
+            break;
+        case ARM_LIB_EVENT_TIMER:
+            // Hand it back to the timer system
+            timer_sys_event_free(free);
+            break;
+        case ARM_LIB_EVENT_USER:
+        default:
+            break;
     }
-
-    platform_exit_critical();
 }
 
 
-static arm_core_event_s *event_core_read(void)
+static arm_event_storage_t *event_core_read(void)
 {
-    arm_core_event_s *event;
     platform_enter_critical();
-    event = ns_list_get_first(&event_queue_active);
+    arm_event_storage_t *event = ns_list_get_first(&event_queue_active);
     if (event) {
         ns_list_remove(&event_queue_active, event);
     }
@@ -194,11 +206,11 @@ static arm_core_event_s *event_core_read(void)
     return event;
 }
 
-void event_core_write(arm_core_event_s *event)
+void event_core_write(arm_event_storage_t *event)
 {
     platform_enter_critical();
     bool added = false;
-    ns_list_foreach(arm_core_event_s, event_tmp, &event_queue_active) {
+    ns_list_foreach(arm_event_storage_t, event_tmp, &event_queue_active) {
         // note enum ordering means we're checking if event_tmp is LOWER priority than event
         if (event_tmp->data.priority > event->data.priority) {
             ns_list_add_before(&event_queue_active, event_tmp, event);
@@ -231,6 +243,7 @@ void eventOS_scheduler_init(void)
 
     //Add first 10 entries to "free" list
     for (unsigned i = 0; i < (sizeof(startup_event_pool) / sizeof(startup_event_pool[0])); i++) {
+        startup_event_pool[i].allocator = ARM_LIB_EVENT_STARTUP_POOL;
         ns_list_add_to_start(&free_event_entry, &startup_event_pool[i]);
     }
 
@@ -241,10 +254,9 @@ void eventOS_scheduler_init(void)
 
 }
 
-
 int8_t eventOS_scheduler_get_active_tasklet(void)
 {
-    return  curr_tasklet;
+    return curr_tasklet;
 }
 
 void eventOS_scheduler_set_active_tasklet(int8_t tasklet)
@@ -282,28 +294,44 @@ int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
  */
 bool eventOS_scheduler_dispatch_event(void)
 {
-    arm_core_tasklet_list_s *tasklet;
-    arm_core_event_s *cur_event;
-    arm_event_s event;
-
     curr_tasklet = 0;
 
-    cur_event =  event_core_read();
-    if (cur_event) {
-        event = cur_event->data;
-        event_core_free_push(cur_event);
-        tasklet = event_tasklet_handler_get(event.receiver);
-        if (tasklet) {
-            curr_tasklet = event.receiver;
-            /* Tasklet Scheduler Call */
-            tasklet->func_ptr(&event);
-            /* Set Current Tasklet to Idle state */
-            curr_tasklet = 0;
-        }
-        return true;
-    } else {
+    arm_event_storage_t *cur_event = event_core_read();
+    if (!cur_event) {
         return false;
     }
+
+    curr_tasklet = cur_event->data.receiver;
+
+    arm_core_tasklet_t *tasklet = event_tasklet_handler_get(curr_tasklet);
+    /* Do not bother with check for NULL - tasklets cannot be deleted,
+     * and user-facing API eventOS_event_send() has already checked the tasklet
+     * exists, so there is no possible issue there.
+     *
+     * For eventOS_event_send_user_allocated(), it would be a non-recoverable
+     * error to not deliver the message - we have to have a receiver to pass
+     * ownership to. If the lookup fails, let it crash. We want the send call
+     * itself to return void to simplify logic.
+     */
+
+    /* Tasklet Scheduler Call */
+    if (cur_event->allocator == ARM_LIB_EVENT_USER) {
+        /* They must get a pointer to the original event */
+        tasklet->func_ptr(&cur_event->data);
+        /* The call takes ownership - we now forget about the event */
+    } else {
+        /* Copy it and free before the call.
+         * XXX is this long-standing behaviour worthwhile?
+         */
+        arm_event_t event_data_copy = cur_event->data;
+        event_core_free_push(cur_event);
+        tasklet->func_ptr(&event_data_copy);
+    }
+
+    /* Set Current Tasklet to Idle state */
+    curr_tasklet = 0;
+
+    return true;
 }
 
 void eventOS_scheduler_run_until_idle(void)

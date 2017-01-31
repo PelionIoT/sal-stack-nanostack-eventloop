@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited. All rights reserved.
+ * Copyright (c) 2017 ARM Limited. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  * Licensed under the Apache License, Version 2.0 (the License); you may
  * not use this file except in compliance with the License.
@@ -13,37 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _PL_NANO_TIMER_SYS_H_
-#define _PL_NANO_TIMER_SYS_H_
+#ifndef NS_EVENT_H_
+#define NS_EVENT_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct arm_event_storage;
-
-/**
- * Initialize system timer
- * */
-extern void timer_sys_init(void);
-
-extern uint32_t timer_get_runtime_ticks(void);
-int8_t timer_sys_wakeup(void);
-void timer_sys_disable(void);
-void timer_sys_event_free(struct arm_event_storage *event);
-
-/**
- * System Timer update and synch after sleep
- *
- * \param ticks Time in 10 ms resolution
- *
- * \return none
- *
- * */
-void system_timer_tick_update(uint32_t ticks);
+bool event_tasklet_handler_id_valid(uint8_t tasklet_id);
+void eventOS_event_send_timer_allocated(arm_event_storage_t *event);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*_PL_NANO_TIMER_SYS_H_*/
+#endif /*NS_EVENT_H_*/
