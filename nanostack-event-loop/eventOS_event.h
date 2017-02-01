@@ -78,9 +78,12 @@ typedef struct arm_event_storage {
  */
 extern int8_t eventOS_event_send(const arm_event_t *event);
 
-/* Alternate name for timer function from eventOS_event_timer.h;
+/* Alternate names for timer function from eventOS_event_timer.h;
  * implementations may one day merge */
-#define eventOS_event_send_at(event, at) eventOS_event_timer_send(event, at)
+#define eventOS_event_send_at(event, at)       eventOS_event_timer_request_at(event, at)
+#define eventOS_event_send_in(event, in)       eventOS_event_timer_request_in(event, in)
+#define eventOS_event_send_after(event, after) eventOS_event_timer_request_after(event, after)
+#define eventOS_event_send_every(event, every) eventOS_event_timer_request_every(event, every)
 
 /**
  * \brief Send user-allocated event to event scheduler.

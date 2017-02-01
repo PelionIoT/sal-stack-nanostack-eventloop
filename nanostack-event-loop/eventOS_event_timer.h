@@ -31,6 +31,7 @@ static inline uint32_t eventOS_event_timer_ticks_to_ms(uint32_t ticks)
     return ticks * (1000 / EVENTOS_EVENT_TIMER_HZ);
 }
 
+/* Convert ms to ticks, rounding up (so 9ms = 1 tick, 10ms = 1 tick, 11ms = 2 ticks) */
 static inline uint32_t eventOS_event_timer_ms_to_ticks(uint32_t ms)
 {
     NS_STATIC_ASSERT(1000 % EVENTOS_EVENT_TIMER_HZ == 0, "Assuming whole number of ms per tick")
@@ -88,6 +89,9 @@ extern int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, 
  * The event will be sent when eventOS_event_timer_ticks() reaches the
  * specified value.
  *
+ * If the specified time is in the past (ie "at" is before or at the current
+ * tick value), the event will be sent immediately.
+ *
  * Can also be invoked using the eventOS_event_send_at() macro in eventOS_event.h
  *
  * \param event event to send
@@ -97,7 +101,90 @@ extern int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, 
  * \return -1 on error (invalid tasklet_id or allocation failure)
  *
  */
-extern int8_t eventOS_event_timer_send(const struct arm_event_s *event, uint32_t at);
+extern int_fast8_t eventOS_event_timer_request_at(const struct arm_event_s *event, uint32_t at);
+
+/**
+ * Send an event in a specified time
+ *
+ * The event will be sent in the specified number of ticks - to
+ * be precise, it is equivalent to requesting an event at
+ *
+ *    eventOS_event_timer_ticks() + ticks
+ *
+ * Because of timer granularity, the elapsed time between issuing the request
+ * and it running may be up to 1 tick less than the specified time.
+ *
+ * eg requesting 2 ticks will cause the event to be sent on the second tick from
+ * now. If requested just after a tick, the delay will be nearly 2 ticks, but if
+ * requested just before a tick, the delay will be just over 1 tick.
+ *
+ * If `in` is 0, the event will be sent immediately.
+ *
+ * Can also be invoked using the eventOS_event_send_in() macro in eventOS_event.h
+ *
+ * \param event event to send
+ * \param in tick delay for event
+ *
+ * \return 0 on success
+ * \return -1 on error (invalid tasklet_id or allocation failure)
+ *
+ */
+extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *event, uint32_t in);
+
+/**
+ * Send an event after a specified time
+ *
+ * The event will be sent after the specified number of ticks - to
+ * be precise, it is equivalent to requesting an event at
+ *
+ *    eventOS_event_timer_ticks() +  ticks + 1
+ *
+ * Because of timer granularity, the elapsed time between issuing the request
+ * and it running may be up to 1 tick more than the specified time.
+ *
+ * eg requesting 2 ticks will cause the event to be sent on the third tick from
+ * now. If requested just after a tick, the delay will be nearly 3 ticks, but if
+ * requested just before a tick, the delay will be just over 2 ticks.
+ *
+ * Can also be invoked using the eventOS_event_send_after() macro in eventOS_event.h
+ *
+ * \param event event to send
+ * \param after tick delay for event
+ *
+ * \return 0 on success
+ * \return -1 on error (invalid tasklet_id or allocation failure)
+ *
+ */
+#define eventOS_event_timer_request_after(event, after) \
+    eventOS_event_timer_request_in(event, (after) + 1)
+
+/**
+ * Send an event periodically
+ *
+ * The event will be sent repeatedly using the specified ticks period.
+ *
+ * The first call is sent at
+ *
+ *          eventOS_event_timer_ticks() +  ticks
+ *
+ * Subsequent events will be sent at N*ticks from the initial time.
+ *
+ * Period will be maintained while the device is awake, regardless of delays to
+ * event scheduling. If an event has not been delivered and completed by the
+ * next scheduled time, the next event will be sent immediately when it
+ * finishes. This could cause a continuous stream of events if unable to keep
+ * up with the period.
+ *
+ * Can also be invoked using the eventOS_event_send_every() macro in eventOS_event.h
+ *
+ * \param event event to send
+ * \param period period for event
+ *
+ * \return 0 on success
+ * \return -1 on error (invalid tasklet_id or allocation failure)
+ *
+ */
+extern int_fast8_t eventOS_event_timer_request_every(const struct arm_event_s *event, uint32_t period);
 
 /**
  * Cancel an event timer
@@ -107,6 +194,9 @@ extern int8_t eventOS_event_timer_send(const struct arm_event_s *event, uint32_t
  * Note that the current implementation can only cancel the *timer* - if the
  * timer has expired and the event is already queued, the pending event is not
  * cancelled.
+ *
+ * If issued from within the event handler for a recurring timer, the call will
+ * work.
  *
  * \param event_id event_id for event
  * \param tasklet_id receiver for event
