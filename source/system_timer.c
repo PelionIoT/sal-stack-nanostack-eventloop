@@ -34,6 +34,7 @@
 typedef struct sys_timer_struct_s {
     arm_event_storage_t event;
     uint32_t launch_time; // tick value
+    uint32_t period;
 } sys_timer_struct_s;
 
 static sys_timer_struct_s startup_sys_timer_pool[ST_MAX];
@@ -42,13 +43,17 @@ static sys_timer_struct_s startup_sys_timer_pool[ST_MAX];
 NS_STATIC_ASSERT(1000 % EVENTOS_EVENT_TIMER_HZ == 0, "Need whole number of ms per tick")
 #define TIMER_SYS_TICK_PERIOD       (1000 / EVENTOS_EVENT_TIMER_HZ) // milliseconds
 
-static uint32_t timer_sys_ticks;
+// timer_sys_ticks must be read in critical section to guarantee
+// atomicity on 16-bit platforms
+static volatile uint32_t timer_sys_ticks;
+
 static NS_LIST_DEFINE(system_timer_free, sys_timer_struct_s, event.link);
 static NS_LIST_DEFINE(system_timer_list, sys_timer_struct_s, event.link);
 
 
 static sys_timer_struct_s *sys_timer_dynamically_allocate(void);
 static void timer_sys_interrupt(void);
+static void timer_sys_add(sys_timer_struct_s *timer);
 
 #ifndef NS_EVENTLOOP_USE_TICK_TIMER
 static int8_t platform_tick_timer_start(uint32_t period_ms);
@@ -149,7 +154,20 @@ void timer_sys_event_free(arm_event_storage_t *event)
 {
     platform_enter_critical();
     sys_timer_struct_s *timer = NS_CONTAINER_OF(event, sys_timer_struct_s, event);
-    ns_list_add_to_start(&system_timer_free, timer);
+    if (timer->period == 0) {
+        // Non-periodic - return to free list
+        ns_list_add_to_start(&system_timer_free, timer);
+    } else {
+        // Periodic - check due time of next launch
+        timer->launch_time += timer->period;
+        if (TICKS_BEFORE_OR_AT(timer->launch_time, timer_sys_ticks)) {
+            // next event is overdue - queue event now
+            eventOS_event_send_timer_allocated(&timer->event);
+        } else {
+            // add back to timer queue for the future
+            timer_sys_add(timer);
+        }
+    }
     platform_exit_critical();
 }
 
@@ -164,45 +182,89 @@ uint32_t eventOS_event_timer_ticks(void)
     return ret_val;
 }
 
-int8_t eventOS_event_timer_send(const arm_event_t *event, uint32_t at)
+/* Called internally with lock held */
+static void timer_sys_add(sys_timer_struct_s *timer)
 {
-
-    platform_enter_critical();
-
-    // Because we use user-allocated events, they must get delivered to avoid
-    // a leak. Previously this call queued timers for invalid tasks, then they
-    // would go undelivered. Now it returns an error.
-    if (!event_tasklet_handler_id_valid(event->receiver)) {
-        goto error;
-    }
-
-    sys_timer_struct_s *timer = timer_struct_get();
-    if (!timer) {
-        goto error;
-    }
-
-    timer->event.data = *event;
-    timer->launch_time = at;
+    uint32_t at = timer->launch_time;
 
     // Find first timer scheduled to run after us, and insert before it.
     // (This means timers scheduled for same time run in order of request)
     ns_list_foreach(sys_timer_struct_s, t, &system_timer_list) {
         if (TICKS_BEFORE(at, t->launch_time)) {
             ns_list_add_before(&system_timer_list, t, timer);
-            goto done;
+            return;
         }
     }
 
     // Didn't insert before another timer, so must be last.
     ns_list_add_to_end(&system_timer_list, timer);
+}
 
-done:
-    platform_exit_critical();
+/* Called internally with lock held */
+static int_fast8_t eventOS_event_timer_request_at_(const arm_event_t *event, uint32_t at, uint32_t period)
+{
+    if (TICKS_BEFORE_OR_AT(at, timer_sys_ticks)) {
+        return eventOS_event_send(event);
+    }
+
+    // Because we use user-allocated events, they must get delivered to avoid
+    // a leak. Previously this call queued timers for invalid tasks, then they
+    // would go undelivered. Now it returns an error.
+    if (!event_tasklet_handler_id_valid(event->receiver)) {
+        return -1;
+    }
+
+    sys_timer_struct_s *timer = timer_struct_get();
+    if (!timer) {
+        return -1;
+    }
+
+    timer->event.data = *event;
+    timer->launch_time = at;
+    timer->period = period;
+
+    timer_sys_add(timer);
+
     return 0;
+}
 
-error:
+int_fast8_t eventOS_event_timer_request_at(const arm_event_t *event, uint32_t at)
+{
+    platform_enter_critical();
+
+    int_fast8_t ret = eventOS_event_timer_request_at_(event, at, 0);
+
     platform_exit_critical();
-    return -1;
+
+    return ret;
+}
+
+int_fast8_t eventOS_event_timer_request_in(const arm_event_t *event, uint32_t in)
+{
+    platform_enter_critical();
+
+    int_fast8_t ret = eventOS_event_timer_request_at_(event, timer_sys_ticks + in, 0);
+
+    platform_exit_critical();
+
+    return ret;
+
+}
+
+int_fast8_t eventOS_event_timer_request_every(const arm_event_t *event, uint32_t period)
+{
+    if (period == 0) {
+        return -1;
+    }
+
+    platform_enter_critical();
+
+    int_fast8_t ret = eventOS_event_timer_request_at_(event, timer_sys_ticks + period, period);
+
+    platform_exit_critical();
+
+    return ret;
+
 }
 
 int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, int8_t tasklet_id, uint32_t time)
@@ -229,7 +291,10 @@ int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, int8_t 
         time = 2;
     }
 
-    return eventOS_event_timer_send(&event, eventOS_event_timer_ticks() + time);
+    platform_enter_critical();
+    int8_t ret = eventOS_event_timer_request_at_(&event, timer_sys_ticks + time, 0);
+    platform_exit_critical();
+    return ret;
 }
 
 int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id)
