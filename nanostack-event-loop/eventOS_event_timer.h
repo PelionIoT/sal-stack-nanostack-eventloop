@@ -118,7 +118,7 @@ extern int_fast8_t eventOS_event_timer_request_at(const struct arm_event_s *even
  * now. If requested just after a tick, the delay will be nearly 2 ticks, but if
  * requested just before a tick, the delay will be just over 1 tick.
  *
- * If `in` is 0, the event will be sent immediately.
+ * If `in` is <= 0, the event will be sent immediately.
  *
  * Can also be invoked using the eventOS_event_send_in() macro in eventOS_event.h
  *
@@ -129,7 +129,7 @@ extern int_fast8_t eventOS_event_timer_request_at(const struct arm_event_s *even
  * \return -1 on error (invalid tasklet_id or allocation failure)
  *
  */
-extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *event, uint32_t in);
+extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *event, int32_t in);
 
 /**
  * Send an event after a specified time
@@ -145,6 +145,9 @@ extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *even
  * eg requesting 2 ticks will cause the event to be sent on the third tick from
  * now. If requested just after a tick, the delay will be nearly 3 ticks, but if
  * requested just before a tick, the delay will be just over 2 ticks.
+ *
+ * If `after` is < 0, the event will be sent immediately. If it is 0, the event
+ * is sent on the next tick.
  *
  * Can also be invoked using the eventOS_event_send_after() macro in eventOS_event.h
  *
@@ -181,10 +184,10 @@ extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *even
  * \param period period for event
  *
  * \return 0 on success
- * \return -1 on error (invalid tasklet_id or allocation failure)
+ * \return -1 on error (invalid tasklet_id, allocation failure or non-positive period)
  *
  */
-extern int_fast8_t eventOS_event_timer_request_every(const struct arm_event_s *event, uint32_t period);
+extern int_fast8_t eventOS_event_timer_request_every(const struct arm_event_s *event, int32_t period);
 
 /**
  * Cancel an event timer
