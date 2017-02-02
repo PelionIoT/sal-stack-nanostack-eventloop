@@ -299,19 +299,33 @@ int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, int8_t 
 
 int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id)
 {
-    int8_t res = -1;
     platform_enter_critical();
+
+    /* First check pending timers */
     ns_list_foreach(sys_timer_struct_s, cur, &system_timer_list) {
         if (cur->event.data.receiver == tasklet_id && cur->event.data.event_id == event_id) {
             ns_list_remove(&system_timer_list, cur);
             ns_list_add_to_start(&system_timer_free, cur);
-            res = 0;
-            break;
+            goto done;
         }
     }
 
+    /* No pending timer, so check for already-pending event */
+    arm_event_storage_t *event = eventOS_event_find_by_id_critical(tasklet_id, event_id);
+    if (event && event->allocator == ARM_LIB_EVENT_TIMER) {
+        eventOS_event_cancel_critical(event);
+        sys_timer_struct_s *cur = NS_CONTAINER_OF(event, sys_timer_struct_s, event);
+        ns_list_add_to_start(&system_timer_free, cur);
+        goto done;
+    }
+
+    /* No match found */
     platform_exit_critical();
-    return res;
+    return -1;
+
+done:
+    platform_exit_critical();
+    return 0;
 }
 
 

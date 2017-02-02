@@ -140,6 +140,11 @@ void eventOS_event_send_timer_allocated(arm_event_storage_t *event)
     event_core_write(event);
 }
 
+void eventOS_event_cancel_critical(arm_event_storage_t *event)
+{
+    ns_list_remove(&event_queue_active, event);
+}
+
 static arm_event_storage_t *event_dynamically_allocate(void)
 {
     arm_event_storage_t *event = ns_dyn_mem_temporary_alloc(sizeof(arm_event_storage_t));
@@ -225,6 +230,18 @@ void event_core_write(arm_event_storage_t *event)
     /* Wake From Idle */
     platform_exit_critical();
     eventOS_scheduler_signal();
+}
+
+// Requires lock to be held
+arm_event_storage_t *eventOS_event_find_by_id_critical(uint8_t tasklet_id, uint8_t event_id)
+{
+    ns_list_foreach(arm_event_storage_t, cur, &event_queue_active) {
+        if (cur->data.receiver == tasklet_id && cur->data.event_id == event_id) {
+            return cur;
+        }
+    }
+
+    return NULL;
 }
 
 /**
