@@ -239,7 +239,7 @@ int_fast8_t eventOS_event_timer_request_at(const arm_event_t *event, uint32_t at
     return ret;
 }
 
-int_fast8_t eventOS_event_timer_request_in(const arm_event_t *event, uint32_t in)
+int_fast8_t eventOS_event_timer_request_in(const arm_event_t *event, int32_t in)
 {
     platform_enter_critical();
 
@@ -251,9 +251,9 @@ int_fast8_t eventOS_event_timer_request_in(const arm_event_t *event, uint32_t in
 
 }
 
-int_fast8_t eventOS_event_timer_request_every(const arm_event_t *event, uint32_t period)
+int_fast8_t eventOS_event_timer_request_every(const arm_event_t *event, int32_t period)
 {
-    if (period == 0) {
+    if (period <= 0) {
         return -1;
     }
 
