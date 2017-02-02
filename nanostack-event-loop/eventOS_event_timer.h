@@ -191,13 +191,6 @@ extern int_fast8_t eventOS_event_timer_request_every(const struct arm_event_s *e
  *
  * This cancels a pending timed event, matched by event_id and tasklet_id.
  *
- * Note that the current implementation can only cancel the *timer* - if the
- * timer has expired and the event is already queued, the pending event is not
- * cancelled.
- *
- * If issued from within the event handler for a recurring timer, the call will
- * work.
- *
  * \param event_id event_id for event
  * \param tasklet_id receiver for event
  *
