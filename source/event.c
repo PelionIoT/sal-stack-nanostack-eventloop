@@ -122,7 +122,6 @@ int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uin
 */
 int8_t eventOS_event_send(arm_event_s *event)
 {
-	printf("netanel: in  %s receiver =%d \r\n",__FUNCTION__,event->receiver);
     int8_t retval = -1;
     if (event_tasklet_handler_get(event->receiver)) {
         arm_core_event_s *event_tmp = event_core_get();
@@ -132,7 +131,6 @@ int8_t eventOS_event_send(arm_event_s *event)
             retval = 0;
         }
     }
-    printf("netanel: out %s \r\n",__FUNCTION__);
     return retval;
 }
 
@@ -176,7 +174,6 @@ static void event_core_free_push(arm_core_event_s *free)
 
 static arm_core_event_s *event_core_read(void)
 {
-	printf("netanel: in %s \r\n",__FUNCTION__);
     arm_core_event_s *event;
     platform_enter_critical();
     event = ns_list_get_first(&event_queue_active);
@@ -184,13 +181,11 @@ static arm_core_event_s *event_core_read(void)
         ns_list_remove(&event_queue_active, event);
     }
     platform_exit_critical();
-    printf("netanel: out %s \r\n",__FUNCTION__);
     return event;
 }
 
 void event_core_write(arm_core_event_s *event)
 {
-	printf("netanel: in %s \r\n",__FUNCTION__);
     platform_enter_critical();
     bool added = false;
     ns_list_foreach(arm_core_event_s, event_tmp, &event_queue_active) {
@@ -199,19 +194,16 @@ void event_core_write(arm_core_event_s *event)
         if (event_tmp->data.priority > event->data.priority) {
             ns_list_add_before(&event_queue_active, event_tmp, event);
             added = true;
-            printf("netanel: data %s bla bla\r\n",__FUNCTION__);
             break;
         }
     }
     if (!added) {
-    	printf("netanel: data %s !added\r\n",__FUNCTION__);
         ns_list_add_to_end(&event_queue_active, event);
     }
 
     /* Wake From Idle */
     platform_exit_critical();
     eventOS_scheduler_signal();
-    printf("netanel: out %s \r\n",__FUNCTION__);
 }
 
 /**
@@ -253,7 +245,7 @@ void eventOS_scheduler_set_active_tasklet(int8_t tasklet)
 {
     curr_tasklet = tasklet;
 }
-
+/*
 int eventOS_scheduler_timer_stop(void)
 {
     timer_sys_disable();
@@ -261,7 +253,7 @@ int eventOS_scheduler_timer_stop(void)
         return 1;
     }
     return 0;
-}
+}*/
 
 int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
 {
@@ -310,7 +302,6 @@ bool eventOS_scheduler_dispatch_event(void)
 
 void eventOS_scheduler_run_until_idle(void)
 {
-	 printf("netanel: in %s \r\n",__FUNCTION__);
     while (eventOS_scheduler_dispatch_event());
 }
 
