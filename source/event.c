@@ -217,6 +217,7 @@ void event_core_write(arm_event_storage_t *event)
     bool added = false;
     ns_list_foreach(arm_event_storage_t, event_tmp, &event_queue_active) {
         // note enum ordering means we're checking if event_tmp is LOWER priority than event
+
         if (event_tmp->data.priority > event->data.priority) {
             ns_list_add_before(&event_queue_active, event_tmp, event);
             added = true;
@@ -280,7 +281,7 @@ void eventOS_scheduler_set_active_tasklet(int8_t tasklet)
 {
     curr_tasklet = tasklet;
 }
-
+/*
 int eventOS_scheduler_timer_stop(void)
 {
     timer_sys_disable();
@@ -288,7 +289,7 @@ int eventOS_scheduler_timer_stop(void)
         return 1;
     }
     return 0;
-}
+}*/
 
 int eventOS_scheduler_timer_synch_after_sleep(uint32_t sleep_ticks)
 {
