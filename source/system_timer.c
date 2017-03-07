@@ -200,12 +200,11 @@ int8_t eventOS_event_timer_cancel(uint8_t snmessage, int8_t tasklet_id)
 {
     int8_t res = -1;
     platform_enter_critical();
-    ns_list_foreach(sys_timer_struct_s, cur, &system_timer_list) {
+    ns_list_foreach_safe(sys_timer_struct_s, cur, &system_timer_list) {
         if (cur->timer_sys_launch_receiver == tasklet_id && cur->timer_sys_launch_message == snmessage) {
             ns_list_remove(&system_timer_list, cur);
             ns_list_add_to_start(&system_timer_free, cur);
             res = 0;
-            break;
         }
     }
 
