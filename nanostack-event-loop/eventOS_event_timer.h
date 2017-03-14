@@ -19,8 +19,10 @@
 extern "C" {
 #endif
 #include "ns_types.h"
+#include "eventOS_event.h"
 
 struct arm_event_s;
+typedef struct sys_timer_struct_s sys_timer_struct_t;
 
 /* 100 Hz ticker, so 10 milliseconds per tick */
 #define EVENTOS_EVENT_TIMER_HZ 100
@@ -97,11 +99,11 @@ extern int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, 
  * \param event event to send
  * \param at absolute tick time to run event at
  *
- * \return 0 on success
- * \return -1 on error (invalid tasklet_id or allocation failure)
+ * \return pointer to timer structure on success
+ * \return NULL on error (invalid tasklet_id or allocation failure)
  *
  */
-extern int_fast8_t eventOS_event_timer_request_at(const struct arm_event_s *event, uint32_t at);
+extern arm_event_storage_t *eventOS_event_timer_request_at(const struct arm_event_s *event, uint32_t at);
 
 /**
  * Send an event in a specified time
@@ -125,11 +127,11 @@ extern int_fast8_t eventOS_event_timer_request_at(const struct arm_event_s *even
  * \param event event to send
  * \param in tick delay for event
  *
- * \return 0 on success
- * \return -1 on error (invalid tasklet_id or allocation failure)
+ * \return pointer to timer structure on success
+ * \return NULL on error (invalid tasklet_id or allocation failure)
  *
  */
-extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *event, int32_t in);
+extern arm_event_storage_t *eventOS_event_timer_request_in(const struct arm_event_s *event, int32_t in);
 
 /**
  * Send an event after a specified time
@@ -154,8 +156,8 @@ extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *even
  * \param event event to send
  * \param after tick delay for event
  *
- * \return 0 on success
- * \return -1 on error (invalid tasklet_id or allocation failure)
+ * \return pointer to timer structure on success
+ * \return NULL on error (invalid tasklet_id or allocation failure)
  *
  */
 #define eventOS_event_timer_request_after(event, after) \
@@ -183,11 +185,11 @@ extern int_fast8_t eventOS_event_timer_request_in(const struct arm_event_s *even
  * \param event event to send
  * \param period period for event
  *
- * \return 0 on success
- * \return -1 on error (invalid tasklet_id, allocation failure or non-positive period)
+ * \return pointer to timer structure on success
+ * \return NULL on error (invalid tasklet_id or allocation failure)
  *
  */
-extern int_fast8_t eventOS_event_timer_request_every(const struct arm_event_s *event, int32_t period);
+extern arm_event_storage_t *eventOS_event_timer_request_every(const struct arm_event_s *event, int32_t period);
 
 /**
  * Cancel an event timer
@@ -202,6 +204,27 @@ extern int_fast8_t eventOS_event_timer_request_every(const struct arm_event_s *e
  *
  * */
 extern int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id);
+
+/**
+ * Cancel an event.
+ *
+ * Queued events are removed from the event-loop queue and/or the timer queue.
+ *
+ * Passing a NULL pointer is allowed, and does nothing.
+ *
+ * Event pointers are valid from the time they are queued until the event
+ * has finished running or is cancelled.
+ *
+ * Cancelling a currently-running event is only useful to stop scheduling
+ * it if it is on a periodic timer; it has no other effect.
+ *
+ * Cancelling an already-cancelled or already-run single-shot event
+ * is undefined behaviour.
+ *
+ * \param event Pointer to event handle or NULL.
+ */
+extern void eventOS_cancel(arm_event_storage_t *event);
+
 
 /**
  * System Timer shortest time in milli seconds
@@ -219,8 +242,8 @@ typedef struct timeout_entry_t timeout_t;
 
 /** Request timeout callback.
  *
- * Create timeout request for specific callback. Maximum 255 timeouts can be requested.
- * Not thread safe. Should not be called from interrupt context.
+ * Create timeout request for specific callback.
+ *
  * \param ms timeout in milliseconds. Maximum range is same as for eventOS_event_timer_request().
  * \param callback function to call after timeout
  * \param arg arquement to pass to callback
@@ -228,8 +251,19 @@ typedef struct timeout_entry_t timeout_t;
  */
 timeout_t *eventOS_timeout_ms(void (*callback)(void *), uint32_t ms, void *arg);
 
+/** Request periodic callback.
+ *
+ * Create timeout request for specific callback. Called periodically until eventOS_timeout_cancel() is called.
+ *
+ * \param every period in milliseconds. Maximum range is same as for eventOS_event_timer_request().
+ * \param callback function to call after timeout
+ * \param arg arquement to pass to callback
+ * \return pointer to timeout structure or NULL on errors
+ */
+timeout_t *eventOS_timeout_every_ms(void (*callback)(void *), uint32_t every, void *arg);
+
 /** Cancell timeout request.
- * Not thread safe. Should not be called from interrupt context.
+ *
  * \param t timeout request id.
  */
 void eventOS_timeout_cancel(timeout_t *t);

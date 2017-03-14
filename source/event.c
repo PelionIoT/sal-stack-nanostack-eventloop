@@ -21,7 +21,7 @@
 #include "timer_sys.h"
 #include "nsdynmemLIB.h"
 #include "ns_timer.h"
-
+#include "event.h"
 #include "platform/arm_hal_interrupt.h"
 
 
@@ -177,8 +177,10 @@ arm_event_storage_t *event_core_get(void)
     return event;
 }
 
-static void event_core_free_push(arm_event_storage_t *free)
+void event_core_free_push(arm_event_storage_t *free)
 {
+    free->state = ARM_LIB_EVENT_UNQUEUED;
+
     switch (free->allocator) {
         case ARM_LIB_EVENT_STARTUP_POOL:
             platform_enter_critical();
@@ -205,6 +207,7 @@ static arm_event_storage_t *event_core_read(void)
     platform_enter_critical();
     arm_event_storage_t *event = ns_list_get_first(&event_queue_active);
     if (event) {
+        event->state = ARM_LIB_EVENT_RUNNING;
         ns_list_remove(&event_queue_active, event);
     }
     platform_exit_critical();
@@ -226,6 +229,7 @@ void event_core_write(arm_event_storage_t *event)
     if (!added) {
         ns_list_add_to_end(&event_queue_active, event);
     }
+    event->state = ARM_LIB_EVENT_QUEUED;
 
     /* Wake From Idle */
     platform_exit_critical();
@@ -332,18 +336,8 @@ bool eventOS_scheduler_dispatch_event(void)
      */
 
     /* Tasklet Scheduler Call */
-    if (cur_event->allocator == ARM_LIB_EVENT_USER) {
-        /* They must get a pointer to the original event */
-        tasklet->func_ptr(&cur_event->data);
-        /* The call takes ownership - we now forget about the event */
-    } else {
-        /* Copy it and free before the call.
-         * XXX is this long-standing behaviour worthwhile?
-         */
-        arm_event_t event_data_copy = cur_event->data;
-        event_core_free_push(cur_event);
-        tasklet->func_ptr(&event_data_copy);
-    }
+    tasklet->func_ptr(&cur_event->data);
+    event_core_free_push(cur_event);
 
     /* Set Current Tasklet to Idle state */
     curr_tasklet = 0;
@@ -370,4 +364,38 @@ NS_NORETURN void eventOS_scheduler_run(void)
             eventOS_scheduler_idle();
         }
     }
+}
+
+void eventOS_cancel(arm_event_storage_t *event)
+{
+    if (!event) {
+        return;
+    }
+
+    platform_enter_critical();
+
+    /*
+     * Notify timer of cancellation.
+     */
+    if (event->allocator == ARM_LIB_EVENT_TIMER) {
+        timer_sys_event_cancel_critical(event);
+    }
+
+    /*
+     * Remove event from the list,
+     * Only queued can be removed, unqued are either timers or stale pointers
+     * RUNNING cannot be removed, we are currenly "in" that event.
+     */
+    if (event->state == ARM_LIB_EVENT_QUEUED) {
+        eventOS_event_cancel_critical(event);
+    }
+
+    /*
+     * Push back to "free" state
+     */
+    if (event->state != ARM_LIB_EVENT_RUNNING) {
+        event_core_free_push(event);
+    }
+
+    platform_exit_critical();
 }
