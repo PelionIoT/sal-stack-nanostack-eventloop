@@ -52,6 +52,21 @@ typedef arm_event_t arm_event_s;
 /**
  * \struct arm_event_storage
  * \brief Event structure storage, including list link.
+
+@startuml
+
+partition "Event loop" {
+(*) -->[event created] "UNQUEUED"
+"UNQUEUED" -->[event_core_write()] "QUEUED"
+"QUEUED" -->[event_core_read()] "RUNNING"
+"RUNNING" ->[event_core_free_push()] "UNQUEUED"
+}
+
+partition "system_timer.c" {
+    "UNQUEUED:timer" -->[eventOS_event_send_timer_allocated()] "QUEUED"
+}
+@enduml
+
  */
 typedef struct arm_event_storage {
     arm_event_s data;
@@ -61,6 +76,11 @@ typedef struct arm_event_storage {
         ARM_LIB_EVENT_USER,
         ARM_LIB_EVENT_TIMER,
     } allocator;
+    enum {
+        ARM_LIB_EVENT_UNQUEUED,
+        ARM_LIB_EVENT_QUEUED,
+        ARM_LIB_EVENT_RUNNING,
+    } state;
     ns_list_link_t link;
 } arm_event_storage_t;
 

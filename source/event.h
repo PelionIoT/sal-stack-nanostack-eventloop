@@ -20,12 +20,12 @@
 extern "C" {
 #endif
 
+
 bool event_tasklet_handler_id_valid(uint8_t tasklet_id);
 void eventOS_event_send_timer_allocated(arm_event_storage_t *event);
 
-// These require lock to be held
+// This requires lock to be held
 arm_event_storage_t *eventOS_event_find_by_id_critical(uint8_t tasklet_id, uint8_t event_id);
-void eventOS_event_cancel_critical(arm_event_storage_t *event);
 
 #ifdef __cplusplus
 }

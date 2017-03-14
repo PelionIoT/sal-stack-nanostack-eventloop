@@ -30,13 +30,6 @@
 #define ST_MAX 6
 #endif
 
-/* We borrow base event storage, including its list link, and add a time field */
-typedef struct sys_timer_struct_s {
-    arm_event_storage_t event;
-    uint32_t launch_time; // tick value
-    uint32_t period;
-} sys_timer_struct_s;
-
 static sys_timer_struct_s startup_sys_timer_pool[ST_MAX];
 
 #define TIMER_SLOTS_PER_MS          20
@@ -171,6 +164,16 @@ void timer_sys_event_free(arm_event_storage_t *event)
     platform_exit_critical();
 }
 
+void timer_sys_event_cancel_critical(struct arm_event_storage *event)
+{
+    sys_timer_struct_s *timer = NS_CONTAINER_OF(event, sys_timer_struct_s, event);
+    timer->period = 0;
+    // If its unqueued it is on my timer list, otherwise it is in event-loop.
+    if (event->state == ARM_LIB_EVENT_UNQUEUED) {
+        ns_list_remove(&system_timer_list, timer);
+    }
+}
+
 uint32_t eventOS_event_timer_ticks(void)
 {
     uint32_t ret_val;
@@ -201,49 +204,51 @@ static void timer_sys_add(sys_timer_struct_s *timer)
 }
 
 /* Called internally with lock held */
-static int_fast8_t eventOS_event_timer_request_at_(const arm_event_t *event, uint32_t at, uint32_t period)
+static arm_event_storage_t *eventOS_event_timer_request_at_(const arm_event_t *event, uint32_t at, uint32_t period)
 {
-    if (TICKS_BEFORE_OR_AT(at, timer_sys_ticks)) {
-        return eventOS_event_send(event);
-    }
-
     // Because we use user-allocated events, they must get delivered to avoid
     // a leak. Previously this call queued timers for invalid tasks, then they
     // would go undelivered. Now it returns an error.
     if (!event_tasklet_handler_id_valid(event->receiver)) {
-        return -1;
+        return NULL;
     }
 
     sys_timer_struct_s *timer = timer_struct_get();
     if (!timer) {
-        return -1;
+        return NULL;
     }
 
     timer->event.data = *event;
+    timer->event.allocator = ARM_LIB_EVENT_TIMER;
+    timer->event.state = ARM_LIB_EVENT_UNQUEUED;
     timer->launch_time = at;
     timer->period = period;
 
-    timer_sys_add(timer);
+    if (TICKS_BEFORE_OR_AT(at, timer_sys_ticks)) {
+        eventOS_event_send_timer_allocated(&timer->event);
+    } else {
+        timer_sys_add(timer);
+    }
 
-    return 0;
+    return &timer->event;
 }
 
-int_fast8_t eventOS_event_timer_request_at(const arm_event_t *event, uint32_t at)
+arm_event_storage_t *eventOS_event_timer_request_at(const arm_event_t *event, uint32_t at)
 {
     platform_enter_critical();
 
-    int_fast8_t ret = eventOS_event_timer_request_at_(event, at, 0);
+    arm_event_storage_t *ret = eventOS_event_timer_request_at_(event, at, 0);
 
     platform_exit_critical();
 
     return ret;
 }
 
-int_fast8_t eventOS_event_timer_request_in(const arm_event_t *event, int32_t in)
+arm_event_storage_t *eventOS_event_timer_request_in(const arm_event_t *event, int32_t in)
 {
     platform_enter_critical();
 
-    int_fast8_t ret = eventOS_event_timer_request_at_(event, timer_sys_ticks + in, 0);
+    arm_event_storage_t *ret = eventOS_event_timer_request_at_(event, timer_sys_ticks + in, 0);
 
     platform_exit_critical();
 
@@ -251,15 +256,15 @@ int_fast8_t eventOS_event_timer_request_in(const arm_event_t *event, int32_t in)
 
 }
 
-int_fast8_t eventOS_event_timer_request_every(const arm_event_t *event, int32_t period)
+arm_event_storage_t *eventOS_event_timer_request_every(const arm_event_t *event, int32_t period)
 {
     if (period <= 0) {
-        return -1;
+        return NULL;
     }
 
     platform_enter_critical();
 
-    int_fast8_t ret = eventOS_event_timer_request_at_(event, timer_sys_ticks + period, period);
+    arm_event_storage_t *ret = eventOS_event_timer_request_at_(event, timer_sys_ticks + period, period);
 
     platform_exit_critical();
 
@@ -292,9 +297,9 @@ int8_t eventOS_event_timer_request(uint8_t event_id, uint8_t event_type, int8_t 
     }
 
     platform_enter_critical();
-    int8_t ret = eventOS_event_timer_request_at_(&event, timer_sys_ticks + time, 0);
+    arm_event_storage_t *ret = eventOS_event_timer_request_at_(&event, timer_sys_ticks + time, 0);
     platform_exit_critical();
-    return ret;
+    return ret?0:-1;
 }
 
 int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id)
@@ -304,8 +309,7 @@ int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id)
     /* First check pending timers */
     ns_list_foreach(sys_timer_struct_s, cur, &system_timer_list) {
         if (cur->event.data.receiver == tasklet_id && cur->event.data.event_id == event_id) {
-            ns_list_remove(&system_timer_list, cur);
-            ns_list_add_to_start(&system_timer_free, cur);
+            eventOS_cancel(&cur->event);
             goto done;
         }
     }
@@ -313,9 +317,7 @@ int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id)
     /* No pending timer, so check for already-pending event */
     arm_event_storage_t *event = eventOS_event_find_by_id_critical(tasklet_id, event_id);
     if (event && event->allocator == ARM_LIB_EVENT_TIMER) {
-        eventOS_event_cancel_critical(event);
-        sys_timer_struct_s *cur = NS_CONTAINER_OF(event, sys_timer_struct_s, event);
-        ns_list_add_to_start(&system_timer_free, cur);
+        eventOS_cancel(event);
         goto done;
     }
 
@@ -327,7 +329,6 @@ done:
     platform_exit_critical();
     return 0;
 }
-
 
 uint32_t eventOS_event_timer_shortest_active_timer(void)
 {
