@@ -206,27 +206,6 @@ extern arm_event_storage_t *eventOS_event_timer_request_every(const struct arm_e
 extern int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id);
 
 /**
- * Cancel an event.
- *
- * Queued events are removed from the event-loop queue and/or the timer queue.
- *
- * Passing a NULL pointer is allowed, and does nothing.
- *
- * Event pointers are valid from the time they are queued until the event
- * has finished running or is cancelled.
- *
- * Cancelling a currently-running event is only useful to stop scheduling
- * it if it is on a periodic timer; it has no other effect.
- *
- * Cancelling an already-cancelled or already-run single-shot event
- * is undefined behaviour.
- *
- * \param event Pointer to event handle or NULL.
- */
-extern void eventOS_cancel(arm_event_storage_t *event);
-
-
-/**
  * System Timer shortest time in milli seconds
  *
  * \param ticks Time in 10 ms resolution

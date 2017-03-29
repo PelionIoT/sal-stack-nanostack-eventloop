@@ -142,6 +142,27 @@ extern void eventOS_event_send_user_allocated(arm_event_storage_t *event);
  *
  * */
 extern int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_t *), uint8_t init_event_type);
+
+/**
+ * Cancel an event.
+ *
+ * Queued events are removed from the event-loop queue and/or the timer queue.
+ *
+ * Passing a NULL pointer is allowed, and does nothing.
+ *
+ * Event pointers are valid from the time they are queued until the event
+ * has finished running or is cancelled.
+ *
+ * Cancelling a currently-running event is only useful to stop scheduling
+ * it if it is on a periodic timer; it has no other effect.
+ *
+ * Cancelling an already-cancelled or already-run single-shot event
+ * is undefined behaviour.
+ *
+ * \param event Pointer to event handle or NULL.
+ */
+extern void eventOS_cancel(arm_event_storage_t *event);
+
 #ifdef __cplusplus
 }
 #endif
