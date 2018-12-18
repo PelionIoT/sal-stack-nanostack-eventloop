@@ -68,6 +68,17 @@ extern int8_t eventOS_event_send(arm_event_s *event);
  *
  * */
 extern int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s *), uint8_t init_event_type);
+
+/**
+ * \brief Event dynamic allocate peak read
+ *
+ * Function will return dynamic allocated peak value
+ *
+ * \return allocate event peak count
+ *
+ * */
+extern uint16_t event_core_dynamic_event_peak_get(void);
+
 #ifdef __cplusplus
 }
 #endif
