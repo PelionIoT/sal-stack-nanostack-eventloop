@@ -137,10 +137,24 @@ int8_t eventOS_event_send(arm_event_s *event)
     return -1;
 }
 
+static uint16_t event_dynamic_allocated_peak = 0;
+static uint16_t event_dynamic_allocated_count = 0;
+
+uint16_t event_core_dynamic_event_peak_get(void)
+{
+    return event_dynamic_allocated_peak;
+}
 
 static arm_core_event_s *event_dynamically_allocate(void)
 {
-    return ns_dyn_mem_alloc(sizeof(arm_core_event_s));
+    arm_core_event_s *event =  ns_dyn_mem_temporary_alloc(sizeof(arm_core_event_s));
+    if (event) {
+        event_dynamic_allocated_count++;
+        if (event_dynamic_allocated_count > event_dynamic_allocated_peak) {
+            event_dynamic_allocated_peak = event_dynamic_allocated_count;
+        }
+    }
+    return event;
 }
 
 static arm_core_tasklet_list_s *tasklet_dynamically_allocate(void)
@@ -157,6 +171,7 @@ arm_core_event_s *event_core_get(void)
     if (event) {
         ns_list_remove(&free_event_entry, event);
     } else {
+
         event = event_dynamically_allocate();
     }
     if (event) {
@@ -175,6 +190,10 @@ static void event_core_free_push(arm_core_event_s *free)
     if ((free >= startup_event_pool) && (free < startup_event_pool+STARTUP_EVENT_POOL_SIZE)) {
         ns_list_add_to_start(&free_event_entry, free);
     } else {
+
+        if (free) {
+            event_dynamic_allocated_count--;
+        }
         ns_dyn_mem_free(free);
     }
 
