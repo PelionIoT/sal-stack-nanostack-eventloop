@@ -43,6 +43,7 @@ static NS_LIST_DEFINE(free_event_entry, arm_core_event_s, link);
 // Statically allocate initial pool of events.
 #define STARTUP_EVENT_POOL_SIZE 10
 static arm_core_event_s startup_event_pool[STARTUP_EVENT_POOL_SIZE];
+static uint16_t event_list_cur_size = 0;
 
 /** Curr_tasklet tell to core and platform which task_let is active, Core Update this automatic when switch Tasklet. */
 int8_t curr_tasklet = 0;
@@ -145,6 +146,11 @@ uint16_t event_core_dynamic_event_peak_get(void)
     return event_dynamic_allocated_peak;
 }
 
+uint16_t eventOS_queue_size_get(void)
+{
+    return event_list_cur_size;
+}
+
 static arm_core_event_s *event_dynamically_allocate(void)
 {
     arm_core_event_s *event =  ns_dyn_mem_temporary_alloc(sizeof(arm_core_event_s));
@@ -208,6 +214,7 @@ static arm_core_event_s *event_core_read(void)
     event = ns_list_get_first(&event_queue_active);
     if (event) {
         ns_list_remove(&event_queue_active, event);
+        event_list_cur_size--;
     }
     platform_exit_critical();
     return event;
@@ -228,6 +235,7 @@ void event_core_write(arm_core_event_s *event)
     if (!added) {
         ns_list_add_to_end(&event_queue_active, event);
     }
+    event_list_cur_size++;
 
     /* Wake From Idle */
     platform_exit_critical();

@@ -79,6 +79,16 @@ extern int8_t eventOS_event_handler_create(void (*handler_func_ptr)(arm_event_s 
  * */
 extern uint16_t event_core_dynamic_event_peak_get(void);
 
+/**
+ * \brief Event list queue size read
+ *
+ * Function will return current event list size
+ *
+ * \return event queue size
+ *
+ * */
+extern uint16_t eventOS_queue_size_get(void);
+
 #ifdef __cplusplus
 }
 #endif
