@@ -18,6 +18,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * \file eventOS_event_timer.h
+ * \ingroup nanostack-eventloop
+ * \brief Functions for sending delayed events.
+ */
+
+
 #include "ns_types.h"
 #include "eventOS_event.h"
 
