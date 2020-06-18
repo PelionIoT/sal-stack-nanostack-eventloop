@@ -216,9 +216,8 @@ extern int8_t eventOS_event_timer_cancel(uint8_t event_id, int8_t tasklet_id);
 /**
  * System Timer shortest time in milli seconds
  *
- * \param ticks Time in 10 ms resolution
- *
- * \return none
+ * \return zero, if no timers are active.
+ * \return time in milliseconds to next timer event.
  *
  * */
 extern uint32_t eventOS_event_timer_shortest_active_timer(void);
