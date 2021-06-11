@@ -24,6 +24,7 @@
 #include "eventOS_event_timer.h"
 #include "event.h"
 #include "eventOS_callback_timer.h"
+#include "nanostack_eventloop.h"
 
 #include "ns_timer.h"
 
@@ -95,8 +96,8 @@ void timer_sys_init(void)
         ns_list_add_to_start(&system_timer_free, &startup_sys_timer_pool[i]);
     }
 
-    platform_tick_timer_register(timer_sys_interrupt);
-    platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    nanostack_platform_tick_timer_register(timer_sys_interrupt);
+    nanostack_platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
@@ -104,7 +105,7 @@ void timer_sys_init(void)
 /*-------------------SYSTEM TIMER FUNCTIONS--------------------------*/
 void timer_sys_disable(void)
 {
-    platform_tick_timer_stop();
+    nanostack_platform_tick_timer_stop();
 }
 
 /*
@@ -112,7 +113,7 @@ void timer_sys_disable(void)
  */
 int8_t timer_sys_wakeup(void)
 {
-    return platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    return nanostack_platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 

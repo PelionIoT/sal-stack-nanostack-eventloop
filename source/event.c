@@ -23,8 +23,7 @@
 #include "nsdynmemLIB.h"
 #include "ns_timer.h"
 #include "event.h"
-#include "platform/arm_hal_interrupt.h"
-
+#include "nanostack_eventloop.h"
 
 typedef struct arm_core_tasklet {
     int8_t id; /**< Event handler Tasklet ID */
@@ -164,7 +163,7 @@ static arm_core_tasklet_t *tasklet_dynamically_allocate(void)
 arm_event_storage_t *event_core_get(void)
 {
     arm_event_storage_t *event;
-    platform_enter_critical();
+    nanostack_enter_critical();
     event = ns_list_get_first(&free_event_entry);
     if (event) {
         ns_list_remove(&free_event_entry, event);
@@ -175,7 +174,7 @@ arm_event_storage_t *event_core_get(void)
         event->data.data_ptr = NULL;
         event->data.priority = ARM_LIB_LOW_PRIORITY_EVENT;
     }
-    platform_exit_critical();
+    nanostack_exit_critical();
     return event;
 }
 
@@ -184,9 +183,9 @@ void event_core_free_push(arm_event_storage_t *free)
     switch (free->allocator) {
         case ARM_LIB_EVENT_STARTUP_POOL:
             free->state = ARM_LIB_EVENT_UNQUEUED;
-            platform_enter_critical();
+            nanostack_enter_critical();
             ns_list_add_to_start(&free_event_entry, free);
-            platform_exit_critical();
+            nanostack_exit_critical();
             break;
         case ARM_LIB_EVENT_DYNAMIC:
             // Free all dynamically allocated events.
@@ -210,19 +209,19 @@ void event_core_free_push(arm_event_storage_t *free)
 
 static arm_event_storage_t *event_core_read(void)
 {
-    platform_enter_critical();
+    nanostack_enter_critical();
     arm_event_storage_t *event = ns_list_get_first(&event_queue_active);
     if (event) {
         event->state = ARM_LIB_EVENT_RUNNING;
         ns_list_remove(&event_queue_active, event);
     }
-    platform_exit_critical();
+    nanostack_exit_critical();
     return event;
 }
 
 void event_core_write(arm_event_storage_t *event)
 {
-    platform_enter_critical();
+    nanostack_enter_critical();
     bool added = false;
     ns_list_foreach(arm_event_storage_t, event_tmp, &event_queue_active) {
         // note enum ordering means we're checking if event_tmp is LOWER priority than event
@@ -238,7 +237,7 @@ void event_core_write(arm_event_storage_t *event)
     event->state = ARM_LIB_EVENT_QUEUED;
 
     /* Wake From Idle */
-    platform_exit_critical();
+    nanostack_exit_critical();
     eventOS_scheduler_signal();
 }
 
@@ -378,7 +377,7 @@ void eventOS_cancel(arm_event_storage_t *event)
         return;
     }
 
-    platform_enter_critical();
+    nanostack_enter_critical();
 
     /*
      * Notify timer of cancellation.
@@ -403,5 +402,5 @@ void eventOS_cancel(arm_event_storage_t *event)
         event_core_free_push(event);
     }
 
-    platform_exit_critical();
+    nanostack_exit_critical();
 }
