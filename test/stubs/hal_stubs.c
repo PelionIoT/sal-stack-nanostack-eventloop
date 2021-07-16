@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pelion and affiliates.
+ * Copyright (c) 2021, Pelion and affiliates.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,22 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NS_EVENT_H_
-#define NS_EVENT_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "ns_types.h"
+#include "arm_hal_timer.h"
+#include "hal_stubs.h"
 
-bool event_tasklet_handler_id_valid(uint8_t tasklet_id);
+hal_stub_def hal_stub;
 
-void eventOS_event_send_timer_allocated(arm_event_storage_t *event);
+void platform_enter_critical() {}
 
-// This requires lock to be held
-arm_event_storage_t *eventOS_event_find_by_id_critical(uint8_t tasklet_id, uint8_t event_id);
+void platform_exit_critical() {}
 
-#ifdef __cplusplus
+void platform_timer_set_cb(platform_timer_cb new_fp)
+{
+    hal_stub.cb = new_fp;
 }
-#endif
 
-#endif /*NS_EVENT_H_*/
+void platform_timer_enable(void) {}
+
+void platform_timer_disable(void) {}
+
+void platform_timer_start(uint16_t slots) {}
+
+uint16_t platform_timer_get_remaining_slots(void)
+{
+    return hal_stub.uint16_value;
+}
+
+

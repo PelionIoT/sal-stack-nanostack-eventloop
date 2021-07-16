@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pelion and affiliates.
+ * Copyright (c) 2021, 2019-2021, Pelion and affiliates.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,22 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NS_EVENT_H_
-#define NS_EVENT_H_
+
+#ifndef EVENT_STUB_H
+#define EVENT_STUB_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool event_tasklet_handler_id_valid(uint8_t tasklet_id);
+typedef struct {
+    int8_t int8_value;
+    int int_value;
+    bool bool_value;
+    void (*event_handler_cb)(arm_event_s *);
+} event_stub_def;
 
-void eventOS_event_send_timer_allocated(arm_event_storage_t *event);
-
-// This requires lock to be held
-arm_event_storage_t *eventOS_event_find_by_id_critical(uint8_t tasklet_id, uint8_t event_id);
+extern event_stub_def event_stub;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*NS_EVENT_H_*/
+#endif // EVENT_STUB_H

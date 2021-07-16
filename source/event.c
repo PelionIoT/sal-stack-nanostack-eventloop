@@ -141,7 +141,7 @@ void eventOS_event_send_timer_allocated(arm_event_storage_t *event)
     event_core_write(event);
 }
 
-void eventOS_event_cancel_critical(arm_event_storage_t *event)
+static void eventOS_event_cancel_critical(arm_event_storage_t *event)
 {
     ns_list_remove(&event_queue_active, event);
 }
@@ -160,7 +160,7 @@ static arm_core_tasklet_t *tasklet_dynamically_allocate(void)
     return ns_dyn_mem_alloc(sizeof(arm_core_tasklet_t));
 }
 
-arm_event_storage_t *event_core_get(void)
+static arm_event_storage_t *event_core_get(void)
 {
     arm_event_storage_t *event;
     nanostack_enter_critical();
@@ -178,7 +178,7 @@ arm_event_storage_t *event_core_get(void)
     return event;
 }
 
-void event_core_free_push(arm_event_storage_t *free)
+static void event_core_free_push(arm_event_storage_t *free)
 {
     switch (free->allocator) {
         case ARM_LIB_EVENT_STARTUP_POOL:
@@ -219,7 +219,7 @@ static arm_event_storage_t *event_core_read(void)
     return event;
 }
 
-void event_core_write(arm_event_storage_t *event)
+static void event_core_write(arm_event_storage_t *event)
 {
     nanostack_enter_critical();
     bool added = false;

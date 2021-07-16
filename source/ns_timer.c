@@ -60,6 +60,9 @@ static bool ns_timer_initialized = 0;
 int8_t eventOS_callback_timer_register(void (*timer_interrupt_handler)(int8_t, uint16_t))
 {
     int8_t retval = -1;
+    if (!timer_interrupt_handler) {
+        return -1;
+    }
 
     if (!ns_timer_initialized) {
         /*Set interrupt handler in HAL driver*/
