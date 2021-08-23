@@ -29,6 +29,8 @@ include(repositories.cmake)
 
 # libservice is needed for ns-list and nsdynmem, so add dependencies
 add_library(nanostackeventloop STATIC)
+add_library(nanostackeventloopInterface INTERFACE)
+target_include_directories(nanostackeventloopInterface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 
 target_sources(nanostackeventloop PRIVATE
     source/event.c
