@@ -59,12 +59,21 @@ if (enable_coverage_data)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif ()
 
-add_executable(ns_timer_test
+add_executable(ns_timer_test EXCLUDE_FROM_ALL
     source/ns_timer.c
     test/ns_timer/ns_timer_test.cpp
     test/stubs/hal_stubs.c
     test/stubs/nsdynmemLIB_stub.c
 )
+# make check, this must be after add_executable!
+add_test(ns_timer_test ns_timer_test)
+if (TARGET check)
+    add_dependencies(check ns_timer_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS ns_timer_test)
+endif()
+
 target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -76,13 +85,22 @@ target_link_libraries(
     nanostack-libservice
 )
 
-add_executable(nanostack_eventloop_test
+add_executable(nanostack_eventloop_test EXCLUDE_FROM_ALL
     source/nanostack_eventloop.c
     test/nanostack_eventloop/nanostack_eventloop_test.cpp
     test/stubs/hal_stubs.c
     test/stubs/event_stub.c
     test/stubs/system_timer_stub.c
 )
+# make check, this must be after add_executable!
+add_test(nanostack_eventloop_test nanostack_eventloop_test)
+if (TARGET check)
+    add_dependencies(check nanostack_eventloop_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS nanostack_eventloop_test)
+endif()
+
 target_include_directories(nanostack_eventloop_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 target_include_directories(nanostack_eventloop_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(nanostack_eventloop_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -95,13 +113,21 @@ target_link_libraries(
 )
 
 # We need to have a test also with NANOSTACK_USE_PAL_FUNCTION_POINTERS defined
-add_executable(nanostack_eventloop_test2
+add_executable(nanostack_eventloop_test2 EXCLUDE_FROM_ALL
     source/nanostack_eventloop.c
     test/nanostack_eventloop/nanostack_eventloop_test.cpp
     test/stubs/hal_stubs.c
     test/stubs/event_stub.c
     test/stubs/system_timer_stub.c
 )
+# make check, this must be after add_executable!
+add_test(nanostack_eventloop_test2 nanostack_eventloop_test2)
+if (TARGET check)
+    add_dependencies(check nanostack_eventloop_test2)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS nanostack_eventloop_test2)
+endif()
 
 target_compile_options(nanostack_eventloop_test2 PRIVATE -DNANOSTACK_USE_PAL_FUNCTION_POINTERS)
 
@@ -116,7 +142,7 @@ target_link_libraries(
     nanostack-libservice
 )
 
-add_executable(event_test
+add_executable(event_test EXCLUDE_FROM_ALL
     source/event.c
     test/event/event_test.cpp
     test/stubs/hal_stubs.c
@@ -126,6 +152,15 @@ add_executable(event_test
     test/stubs/ns_timer_stub.c
     test/stubs/nsdynmemLIB_stub.c
 )
+# make check, this must be after add_executable!
+add_test(event_test event_test)
+if (TARGET check)
+    add_dependencies(check event_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS event_test)
+endif()
+
 target_include_directories(event_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 target_include_directories(event_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(event_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -137,7 +172,7 @@ target_link_libraries(
     nanostack-libservice
 )
 
-add_executable(ns_timeout_test
+add_executable(ns_timeout_test EXCLUDE_FROM_ALL
     source/ns_timeout.c
     test/ns_timeout/ns_timeout_test.cpp
     test/stubs/hal_stubs.c
@@ -145,6 +180,15 @@ add_executable(ns_timeout_test
     test/stubs/system_timer_stub.c
     test/stubs/nsdynmemLIB_stub.c
 )
+# make check, this must be after add_executable!
+add_test(ns_timeout_test ns_timeout_test)
+if (TARGET check)
+    add_dependencies(check ns_timeout_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS ns_timeout_test)
+endif()
+
 target_include_directories(ns_timeout_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 target_include_directories(ns_timeout_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(ns_timeout_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -156,7 +200,7 @@ target_link_libraries(
     nanostack-libservice
 )
 
-add_executable(system_timer_test
+add_executable(system_timer_test EXCLUDE_FROM_ALL
     source/system_timer.c
     test/system_timer/system_timer_test.cpp
     test/stubs/hal_stubs.c
@@ -164,6 +208,15 @@ add_executable(system_timer_test
     test/stubs/ns_timer_stub.c
     test/stubs/nanostack_eventloop_stub.c
 )
+# make check, this must be after add_executable!
+add_test(system_timer_test system_timer_test)
+if (TARGET check)
+    add_dependencies(check system_timer_test)
+else()
+    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS system_timer_test)
+endif()
+
 target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
