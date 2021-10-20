@@ -251,17 +251,17 @@ PROPERTIES
 )
 
 include(GoogleTest)
-gtest_discover_tests(ns_timer_test)
-gtest_discover_tests(nanostack_eventloop_test)
-gtest_discover_tests(nanostack_eventloop_test2)
-gtest_discover_tests(event_test)
-gtest_discover_tests(ns_timeout_test)
-gtest_discover_tests(system_timer_test)
+gtest_discover_tests(ns_timer_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR nstimer_xml)
+gtest_discover_tests(nanostack_eventloop_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR nanostack_eventloop_xml)
+gtest_discover_tests(nanostack_eventloop_test2 EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR nanostack_eventloop2_xml)
+gtest_discover_tests(event_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR event_xml)
+gtest_discover_tests(ns_timeout_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR ns_timeout_xml)
+gtest_discover_tests(system_timer_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR system_timer_xml)
 
 if (enable_coverage_data AND ${CMAKE_PROJECT_NAME} STREQUAL "nanostackeventloop")
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html")
 
     add_test(NAME coap_cov WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMAND ${BASH} -c "gcovr -r . -e ${CMAKE_CURRENT_SOURCE_DIR}/build -e '.*test.*' --html --html-details -o build/html/example-html-details.html"
+        COMMAND ${BASH} -c "gcovr -r . -e ${CMAKE_CURRENT_SOURCE_DIR}/build -e '.*test.*' --html --html-details -o build/html/coverity_index.html"
     )
 endif ()
