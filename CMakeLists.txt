@@ -16,6 +16,7 @@
 ## limitations under the License.
 #################################################################################
 
+if ((NOT DEFINED OS_BRAND))
 target_include_directories(mbed-nanostack-sal_stack-event_loop
     INTERFACE
         .
@@ -31,6 +32,7 @@ target_sources(mbed-nanostack-sal_stack-event_loop
         source/ns_timer.c
         source/system_timer.c
 )
+else()
 
 cmake_minimum_required (VERSION 3.14)
 SET(CMAKE_SYSTEM_NAME Generic)
@@ -265,3 +267,4 @@ if (enable_coverage_data AND ${CMAKE_PROJECT_NAME} STREQUAL "nanostackeventloop"
         COMMAND ${BASH} -c "gcovr -r . -e ${CMAKE_CURRENT_SOURCE_DIR}/build -e '.*test.*' --html --html-details -o build/html/coverity_index.html"
     )
 endif ()
+endif() # (NOT DEFINED OS_BRAND)

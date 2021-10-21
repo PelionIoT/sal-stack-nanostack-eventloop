@@ -26,7 +26,7 @@ git clone sal-stack-nanostack-eventloop
 cd sal-stack-nanostack-eventloop
 mkdir build
 cd build
-cmake ..
+cmake .. -DOS_BRAND=Linux
 
 make check
 ```
@@ -36,13 +36,13 @@ make check
 Code coverage is optional feature and it is disabled by default.
 To enable code coverage use the following command to build the tests:
 ```
-cmake .. -Denable_coverage_data=ON
+cmake .. -Denable_coverage_data=ON -DOS_BRAND=Linux
 ```
 
 ### Debugging
 
 You can add mode debug information to the build by adding a `-DCMAKE_BUILD_TYPE=Debug` to the build command, like:
 ```
-cmake .. -Denable_coverage_data=ON -DCMAKE_BUILD_TYPE=Debug
+cmake .. -Denable_coverage_data=ON -DCMAKE_BUILD_TYPE=Debug -DOS_BRAND=Linux
 ```
 And then debug the generated executable with a debugger like `Visual code`, `gdb`, `Eclipse`.
