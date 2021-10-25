@@ -37,7 +37,7 @@ uint32_t timer_get_runtime_ticks(void)
     return ticks;
 }
 
-void cb(void *a){}
+void cb(void *a) {}
 
 class system_timer_test : public testing::Test {
 protected:

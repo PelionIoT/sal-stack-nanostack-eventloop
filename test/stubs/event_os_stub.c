@@ -50,9 +50,9 @@ void eventOS_scheduler_set_active_tasklet(int8_t tasklet){}
 
 void eventOS_scheduler_wait(void){}*/
 
-void eventOS_scheduler_idle(void){}
+void eventOS_scheduler_idle(void) {}
 
-void eventOS_scheduler_signal(void){}
+void eventOS_scheduler_signal(void) {}
 /*
 uint32_t eventOS_scheduler_sleep(uint32_t sleep_time_ms)
 {

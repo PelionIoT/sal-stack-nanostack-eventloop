@@ -109,7 +109,7 @@ void eventOS_scheduler_run_until_idle(void)
 
 void eventOS_scheduler_run(void)
 {
-    while(1);
+    while (1);
 }
 
 void eventOS_cancel(arm_event_storage_t *event)

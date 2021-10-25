@@ -49,7 +49,7 @@ protected:
     }
 };
 
-void cb(void *a){}
+void cb(void *a) {}
 
 TEST_F(ns_timeout_test, eventOS_timeout_ms)
 {

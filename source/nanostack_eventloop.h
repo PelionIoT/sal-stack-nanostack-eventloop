@@ -35,9 +35,8 @@ typedef int8_t (*platform_tick_timer_start_fptr)(uint32_t);
 typedef int8_t (*platform_tick_timer_stop_fptr)(void);
 typedef int8_t (*platform_tick_timer_register_fptr)(void (*tick_timer_cb_handler)(void));
 
-typedef struct ns_func_pointers_t
-{
-	platform_enter_critical_fptr pl_enter_critical;
+typedef struct ns_func_pointers_t {
+    platform_enter_critical_fptr pl_enter_critical;
     platform_exit_critical_fptr pl_exit_critical;
     platform_tick_timer_start_fptr pl_tick_timer_start;
     platform_tick_timer_stop_fptr pl_tick_timer_stop;

@@ -50,20 +50,20 @@ protected:
     }
 };
 
-static void event_handler(arm_event_s* event)
+static void event_handler(arm_event_s *event)
 {
 }
 
-static void event_handler1(arm_event_s* event) {}
-static void event_handler2(arm_event_s* event) {}
-static void event_handler3(arm_event_s* event) {}
-static void event_handler4(arm_event_s* event) {}
-static void event_handler5(arm_event_s* event) {}
-static void event_handler6(arm_event_s* event) {}
-static void event_handler7(arm_event_s* event) {}
-static void event_handler8(arm_event_s* event) {}
-static void event_handler9(arm_event_s* event) {}
-static void event_handler10(arm_event_s* event) {}
+static void event_handler1(arm_event_s *event) {}
+static void event_handler2(arm_event_s *event) {}
+static void event_handler3(arm_event_s *event) {}
+static void event_handler4(arm_event_s *event) {}
+static void event_handler5(arm_event_s *event) {}
+static void event_handler6(arm_event_s *event) {}
+static void event_handler7(arm_event_s *event) {}
+static void event_handler8(arm_event_s *event) {}
+static void event_handler9(arm_event_s *event) {}
+static void event_handler10(arm_event_s *event) {}
 
 TEST_F(event_test, event_tasklet_handler_id_valid)
 {
@@ -155,7 +155,7 @@ TEST_F(event_test, eventOS_event_send)
     ASSERT_EQ(-1, ret);
 
     ev.receiver = id;
-    for (int i=0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         ret = eventOS_event_send(&ev);
     }
     nsdynmemlib_stub.expectedPointer = NULL;

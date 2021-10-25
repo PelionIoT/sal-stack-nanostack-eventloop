@@ -35,7 +35,7 @@ protected:
     }
 };
 
-void timer_interrupt_handler(int8_t a, uint16_t b){}
+void timer_interrupt_handler(int8_t a, uint16_t b) {}
 
 #ifndef NS_EXCLUDE_HIGHRES_TIMER
 TEST_F(ns_timer_test, eventOS_callback_timer_register_unregister)

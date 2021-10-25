@@ -19,8 +19,8 @@
 #include "ns_types.h"
 #include "nanostack_eventloop.h"
 
-void platform_enter_critical_f(){}
-void platform_exit_critical_f(){}
+void platform_enter_critical_f() {}
+void platform_exit_critical_f() {}
 
 int8_t platform_tick_timer_start_f(uint32_t a)
 {
