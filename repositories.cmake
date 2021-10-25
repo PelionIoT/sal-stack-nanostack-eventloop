@@ -37,7 +37,7 @@ FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(nanostack_libservice_decl
     GIT_REPOSITORY      ${nanostack_libservice_repo}
-    GIT_TAG             "cmake_refactor"
+    GIT_TAG             "master"
 )
 
 if (${CMAKE_PROJECT_NAME} STREQUAL "nanostackeventloop")
