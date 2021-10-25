@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2017, Pelion and affiliates.
+ * Copyright 2020-2021 Pelion.
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +22,8 @@
 extern "C" {
 #endif
 
-
 bool event_tasklet_handler_id_valid(uint8_t tasklet_id);
+
 void eventOS_event_send_timer_allocated(arm_event_storage_t *event);
 
 // This requires lock to be held

@@ -20,7 +20,6 @@
 #include "nsdynmemLIB.h"
 #include "ns_list.h"
 #include "timer_sys.h"
-#include "assert.h"
 
 #define STARTUP_EVENT 0
 #define TIMER_EVENT 1
@@ -44,7 +43,6 @@ static void timeout_tasklet(arm_event_s *event)
     arm_event_storage_t *storage = t->event;
     sys_timer_struct_s *timer = NS_CONTAINER_OF(storage, sys_timer_struct_s, event);
 
-    assert(t->callback);
     t->callback(t->arg);
 
 

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014-2017, Pelion and affiliates.
+ * Copyright 2020-2021 Pelion.
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,7 +62,6 @@ extern uint16_t platform_timer_get_remaining_slots(void);
 
 #endif // NS_EXCLUDE_HIGHRES_TIMER
 
-#ifdef NS_EVENTLOOP_USE_TICK_TIMER
 /**
  * \brief This function is API for registering low resolution tick timer callback. Also does
  *        any necessary initialization of the tick timer.
@@ -86,8 +86,6 @@ extern int8_t platform_tick_timer_start(uint32_t period_ms);
  * \return -1 for failure, success otherwise
  */
 extern int8_t platform_tick_timer_stop(void);
-
-#endif // NS_EVENTLOOP_USE_TICK_TIMER
 
 #ifdef __cplusplus
 }

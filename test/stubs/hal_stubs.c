@@ -15,23 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NS_TIMER_H_
-#define NS_TIMER_H_
+#include "ns_types.h"
+#include "arm_hal_timer.h"
+#include "hal_stubs.h"
 
-#include "platform/eventloop_config.h"
+hal_stub_def hal_stub;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void platform_enter_critical() {}
 
-#ifndef NS_EXCLUDE_HIGHRES_TIMER
-extern int8_t ns_timer_sleep(void);
-#else
-#define ns_timer_sleep() ((int8_t) 0)
-#endif
+void platform_exit_critical() {}
 
-#ifdef __cplusplus
+void platform_timer_set_cb(platform_timer_cb new_fp)
+{
+    hal_stub.cb = new_fp;
 }
-#endif
 
-#endif /*NS_TIMER_H_*/
+void platform_timer_enable(void) {}
+
+void platform_timer_disable(void) {}
+
+void platform_timer_start(uint16_t slots) {}
+
+uint16_t platform_timer_get_remaining_slots(void)
+{
+    return hal_stub.uint16_value;
+}
+
+

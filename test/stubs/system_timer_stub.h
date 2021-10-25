@@ -15,23 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NS_TIMER_H_
-#define NS_TIMER_H_
-
-#include "platform/eventloop_config.h"
+#ifndef SYSTEM_TIMER_STUB_H
+#define SYSTEM_TIMER_STUB_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef NS_EXCLUDE_HIGHRES_TIMER
-extern int8_t ns_timer_sleep(void);
-#else
-#define ns_timer_sleep() ((int8_t) 0)
-#endif
+#include "eventOS_event.h"
+
+typedef struct {
+    int8_t int8_value;
+    uint32_t uint32_value;
+    arm_event_storage_t *storage;
+} system_timer_stub_def;
+
+extern system_timer_stub_def system_timer_stub;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*NS_TIMER_H_*/
+#endif // SYSTEM_TIMER_STUB_H

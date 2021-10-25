@@ -15,23 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NS_TIMER_H_
-#define NS_TIMER_H_
-
-#include "platform/eventloop_config.h"
+#ifndef __NSDYNMEMLIB_STUB_H__
+#define __NSDYNMEMLIB_STUB_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef NS_EXCLUDE_HIGHRES_TIMER
-extern int8_t ns_timer_sleep(void);
-#else
-#define ns_timer_sleep() ((int8_t) 0)
-#endif
+#include "stdint.h"
+
+typedef struct {
+    uint8_t returnCounter;
+    void *expectedPointer;
+} nsdynmemlib_stub_data_t;
+
+extern nsdynmemlib_stub_data_t nsdynmemlib_stub;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*NS_TIMER_H_*/
+#endif

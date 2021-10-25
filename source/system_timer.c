@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014-2018, Pelion and affiliates.
+ * Copyright 2020-2021 Pelion.
+ *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +25,7 @@
 #include "eventOS_event_timer.h"
 #include "event.h"
 #include "eventOS_callback_timer.h"
+#include "nanostack_eventloop.h"
 
 #include "ns_timer.h"
 
@@ -50,7 +52,6 @@ static void timer_sys_interrupt(void);
 static void timer_sys_add(sys_timer_struct_s *timer);
 
 #ifndef NS_EVENTLOOP_USE_TICK_TIMER
-static int8_t platform_tick_timer_start(uint32_t period_ms);
 /* Implement platform tick timer using eventOS timer */
 // platform tick timer callback function
 static void (*tick_timer_callback)(void);
@@ -68,19 +69,19 @@ static void tick_timer_eventOS_callback(int8_t timer_id, uint16_t slots)
     }
 }
 
-static int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
+extern int8_t platform_tick_timer_register(void (*tick_timer_cb)(void))
 {
     tick_timer_callback = tick_timer_cb;
     tick_timer_id = eventOS_callback_timer_register(tick_timer_eventOS_callback);
     return tick_timer_id;
 }
 
-static int8_t platform_tick_timer_start(uint32_t period_ms)
+extern int8_t platform_tick_timer_start(uint32_t period_ms)
 {
     return eventOS_callback_timer_start(tick_timer_id, TIMER_SLOTS_PER_MS * period_ms);
 }
 
-static int8_t platform_tick_timer_stop(void)
+extern int8_t platform_tick_timer_stop(void)
 {
     return eventOS_callback_timer_stop(tick_timer_id);
 }
@@ -95,8 +96,8 @@ void timer_sys_init(void)
         ns_list_add_to_start(&system_timer_free, &startup_sys_timer_pool[i]);
     }
 
-    platform_tick_timer_register(timer_sys_interrupt);
-    platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    nanostack_platform_tick_timer_register(timer_sys_interrupt);
+    nanostack_platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
@@ -104,7 +105,7 @@ void timer_sys_init(void)
 /*-------------------SYSTEM TIMER FUNCTIONS--------------------------*/
 void timer_sys_disable(void)
 {
-    platform_tick_timer_stop();
+    nanostack_platform_tick_timer_stop();
 }
 
 /*
@@ -112,7 +113,7 @@ void timer_sys_disable(void)
  */
 int8_t timer_sys_wakeup(void)
 {
-    return platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
+    return nanostack_platform_tick_timer_start(TIMER_SYS_TICK_PERIOD);
 }
 
 
