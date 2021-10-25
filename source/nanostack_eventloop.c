@@ -23,7 +23,7 @@
 #endif
 #include <assert.h>
 
-static ns_func_pointers_t func_pointers = {};
+static ns_func_pointers_t func_pointers = {0};
 
 void nanostack_eventOS_scheduler_init(platform_enter_critical_fptr pl_enter_critical, platform_exit_critical_fptr pl_exit_critical, platform_tick_timer_start_fptr pl_tick_timer_start,
                                       platform_tick_timer_stop_fptr pl_tick_timer_stop, platform_tick_timer_register_fptr pl_tick_timer_register)

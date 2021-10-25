@@ -13,7 +13,8 @@ SRCS += \
 		source/event.c \
 		source/ns_timer.c \
 		source/system_timer.c\
-		source/ns_timeout.c
+		source/ns_timeout.c\
+		source/nanostack_eventloop.c
 
 include ../libService/toolchain_rules.mk
 
