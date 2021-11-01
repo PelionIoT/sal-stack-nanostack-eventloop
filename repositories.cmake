@@ -35,11 +35,8 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-FetchContent_Declare(nanostack_libservice_decl
-    GIT_REPOSITORY      ${nanostack_libservice_repo}
-    GIT_TAG             "master"
-)
-
-if (${CMAKE_PROJECT_NAME} STREQUAL "nanostackeventloop")
-    FetchContent_MakeAvailable(nanostack_libservice_decl)
-endif()
+# Clone libservice to the binary directory and set variables to be used in CMakeLists.txt
+execute_process(COMMAND git clone ${nanostack_libservice_repo} WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+set(NANOSTACK_LIBSERVICE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/nanostack-libservice/mbed-client-libservice CACHE PATH "libservice include directory")
+set(NANOSTACK_LIBSERVICE_NS_LIST_SRC ${CMAKE_BINARY_DIR}/nanostack-libservice/source/libList/ns_list.c)
+set(NANOSTACK_LIBSERVICE_NSDYNMEM_SRC ${CMAKE_BINARY_DIR}/nanostack-libservice/source/nsdynmemLIB/nsdynmemLIB.c)
