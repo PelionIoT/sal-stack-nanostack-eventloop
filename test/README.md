@@ -18,7 +18,7 @@ sudo apt-get install gcovr
 
 ## Building and running
 
-Prepare unit test build with `cmake ..` and then run the test with `make check` as follows:
+Prepare unit test build with `cmake ..` and then run the test with `make all test` as follows:
 
 ```
 # clone repository if needed
@@ -28,7 +28,7 @@ mkdir build
 cd build
 cmake .. -DOS_BRAND=Linux
 
-make check
+make all test
 ```
 
 ### Code coverage
