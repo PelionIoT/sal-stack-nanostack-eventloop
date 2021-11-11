@@ -50,16 +50,18 @@ add_library(nanostackeventloop STATIC)
 add_library(nanostackeventloopInterface INTERFACE)
 target_include_directories(nanostackeventloopInterface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
 
-include_directories(${NANOSTACK_LIBSERVICE_INCLUDE_DIR})
-
 target_sources(nanostackeventloop PRIVATE
     source/event.c
     source/event.h
     source/nanostack_eventloop.c
+    source/nanostack_eventloop.h
     source/ns_timer.c
     source/ns_timer.h
     source/system_timer.c
+    source/timer_sys.h
 )
+
+target_link_libraries(nanostackeventloop nanostack-libservice)
 
 target_include_directories(nanostackeventloop PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(nanostackeventloop PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop)
@@ -77,10 +79,10 @@ endif ()
 
 add_executable(ns_timer_test EXCLUDE_FROM_ALL
     source/ns_timer.c
-    ${NANOSTACK_LIBSERVICE_NS_LIST_SRC}
     test/ns_timer/ns_timer_test.cpp
     test/stubs/hal_stubs.c
     test/stubs/nsdynmemLIB_stub.c
+    test/stubs/ns_list_stub.c
 )
 # make check, this must be after add_executable!
 add_test(ns_timer_test ns_timer_test)
@@ -95,10 +97,12 @@ target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nano
 target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
 target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/test/stubs)
+target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
     ns_timer_test
     gtest_main
+    nanostack-libserviceInterface
 )
 
 add_executable(nanostack_eventloop_test EXCLUDE_FROM_ALL
@@ -125,6 +129,7 @@ target_include_directories(nanostack_eventloop_test PUBLIC ${CMAKE_CURRENT_SOURC
 target_link_libraries(
     nanostack_eventloop_test
     gtest_main
+    nanostack-libserviceInterface
 )
 
 # We need to have a test also with NANOSTACK_USE_PAL_FUNCTION_POINTERS defined
@@ -154,11 +159,11 @@ target_include_directories(nanostack_eventloop_test2 PUBLIC ${CMAKE_CURRENT_SOUR
 target_link_libraries(
     nanostack_eventloop_test2
     gtest_main
+    nanostack-libserviceInterface
 )
 
 add_executable(event_test EXCLUDE_FROM_ALL
     source/event.c
-    ${NANOSTACK_LIBSERVICE_NS_LIST_SRC}
     test/event/event_test.cpp
     test/stubs/hal_stubs.c
     test/stubs/system_timer_stub.c
@@ -166,6 +171,7 @@ add_executable(event_test EXCLUDE_FROM_ALL
     test/stubs/event_os_stub.c
     test/stubs/ns_timer_stub.c
     test/stubs/nsdynmemLIB_stub.c
+    test/stubs/ns_list_stub.c
 )
 # make check, this must be after add_executable!
 add_test(event_test event_test)
@@ -184,6 +190,7 @@ target_include_directories(event_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/test/st
 target_link_libraries(
     event_test
     gtest_main
+    nanostack-libserviceInterface
 )
 
 add_executable(ns_timeout_test EXCLUDE_FROM_ALL
@@ -211,17 +218,18 @@ target_include_directories(ns_timeout_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/te
 target_link_libraries(
     ns_timeout_test
     gtest_main
+    nanostack-libserviceInterface
 )
 
 add_executable(system_timer_test EXCLUDE_FROM_ALL
     source/system_timer.c
-    ${NANOSTACK_LIBSERVICE_NS_LIST_SRC}
-    ${NANOSTACK_LIBSERVICE_NSDYNMEM_SRC}
     test/system_timer/system_timer_test.cpp
     test/stubs/hal_stubs.c
     test/stubs/event_stub.c
     test/stubs/ns_timer_stub.c
     test/stubs/nanostack_eventloop_stub.c
+    test/stubs/ns_list_stub.c
+    test/stubs/nsdynmemLIB_stub.c
 )
 # make check, this must be after add_executable!
 add_test(system_timer_test system_timer_test)
@@ -236,10 +244,12 @@ target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/
 target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/nanostack-event-loop/platform)
 target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
 target_include_directories(system_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/test/stubs)
+target_include_directories(ns_timer_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
     system_timer_test
     gtest_main
+    nanostack-libserviceInterface
 )
 
 # GTest framework requires C++ version 11
