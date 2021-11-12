@@ -52,13 +52,9 @@ target_include_directories(nanostackeventloopInterface INTERFACE ${CMAKE_CURRENT
 
 target_sources(nanostackeventloop PRIVATE
     source/event.c
-    source/event.h
     source/nanostack_eventloop.c
-    source/nanostack_eventloop.h
     source/ns_timer.c
-    source/ns_timer.h
     source/system_timer.c
-    source/timer_sys.h
 )
 
 target_link_libraries(nanostackeventloop nanostack-libservice)
