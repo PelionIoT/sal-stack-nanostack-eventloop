@@ -194,7 +194,7 @@ if (test_all OR ${CMAKE_PROJECT_NAME} STREQUAL "nanostackeventloop")
     gtest_discover_tests(system_timer_test EXTRA_ARGS --gtest_output=xml: XML_OUTPUT_DIR system_timer_xml)
     if (enable_coverage_data AND ${CMAKE_PROJECT_NAME} STREQUAL "nanostackeventloop")
         file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html")
-        add_test(NAME coap_cov WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        add_test(NAME nanostack_eventloop_cov WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${BASH} -c "gcovr -r . -e ${CMAKE_CURRENT_SOURCE_DIR}/build -e '.*test.*' --html --html-details -o build/html/coverage_index.html"
         )
     endif ()
