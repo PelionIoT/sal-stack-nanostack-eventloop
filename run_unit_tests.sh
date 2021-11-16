@@ -27,4 +27,4 @@ TEST_DIR="build"
 mkdir -p ${TEST_DIR}
 cd ${TEST_DIR}
 cmake .. -DCMAKE_BUILD_TYPE=Debug -Denable_coverage_data=ON -DOS_BRAND=Linux
-make check
+make all test
