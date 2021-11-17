@@ -1,5 +1,5 @@
 #################################################################################
-## Copyright 2021 Pelion.
+## Copyright 2020-2021 Pelion.
 ##
 ## SPDX-License-Identifier: Apache-2.0
 ##
@@ -16,13 +16,19 @@
 ## limitations under the License.
 #################################################################################
 
-# Mbed OS target build
-if(DEFINED MBED_TOOLCHAIN)
-    include(sal-stack-nanostack-eventloop-mbed.cmake)
-else()
-    cmake_minimum_required (VERSION 3.14)
-    project(nanostackeventloop)
+target_include_directories(mbed-nanostack-sal_stack-event_loop
+    INTERFACE
+        .
+        ./nanostack-event-loop
+        ./nanostack-event-loop/platform
+        ./source
+)
 
-    include(sal-stack-nanostack-eventloop.cmake)
-endif()
-
+target_sources(mbed-nanostack-sal_stack-event_loop
+    INTERFACE
+        source/event.c
+        source/nanostack_eventloop.c
+        source/ns_timeout.c
+        source/ns_timer.c
+        source/system_timer.c
+)
